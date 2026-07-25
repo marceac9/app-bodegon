@@ -7,13 +7,6 @@ import {
 
 const ADMIN_PIN = '1234';
 
-const SEED_PRODUCTOS = [
-  { id: 101, nombre: 'Cerveza Tirada', categoria: 'Bebida', precio: 2500 },
-  { id: 102, nombre: 'Hamburguesa', categoria: 'Comida', precio: 6000 },
-  { id: 103, nombre: 'Pastas', categoria: 'Comida', precio: 5000 },
-  { id: 104, nombre: 'Helado', categoria: 'Postre', precio: 3000 },
-];
-
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap');
 
@@ -136,7 +129,7 @@ const STYLES = `
 .icon-btn-danger { color: var(--ocupada); border-color: var(--ocupada-bg); }
 .mesa-chip-admin { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 7px 6px 7px 13px; font-size: 12.5px; }
 .mesa-chip-admin button { width: 20px; height: 20px; border-radius: 50%; border: none; background: var(--ocupada-bg); color: var(--ocupada); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-.aviso { background: var(--ocupada-bg); color: var(--ocupada); padding: 9px 12px; border-radius: 9px; font-size: 12.5px; margin-bottom: 12px; }
+.aviso { background: var(--ocupada-bg); color: var(--ocupada); padding: 9px 12px; border-radius: 999px; font-size: 12.5px; margin-bottom: 12px; }
 
 .form-field { margin-bottom: 12px; }
 .form-field label { display: block; font-family: 'Oswald', sans-serif; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
@@ -202,7 +195,7 @@ function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
       <Loader2 size={26} className="animate-spin" style={{ color: 'var(--accent)' }} />
-      <div style={{ fontFamily: 'Oswald', fontSize: 12.5, letterSpacing: '.06em', color: 'var(--text-muted)' }}>CARGANDO MESAS…</div>
+      <div style={{ fontFamily: 'Oswald', fontSize: 12.5, letterSpacing: '.06em', color: 'var(--text-muted)' }}>CARGANDO MESAS Y MENÚ…</div>
     </div>
   );
 }
@@ -558,7 +551,7 @@ function PanelAdmin({ productos, mesas, onSalir, onNuevoProducto, onEditarProduc
       </div>
 
       <div style={{ marginTop: 30, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-        Los cambios de productos, precios y mesas se guardan para todos los que tengan esta app abierta. El PIN de admin es solo una traba de uso para esta demo — para producción hace falta un login real por usuario.
+        Los cambios de productos, precios y mesas se guardan en la nube en tiempo real para todos los dispositivos conectados.
       </div>
     </div>
   );
@@ -566,7 +559,7 @@ function PanelAdmin({ productos, mesas, onSalir, onNuevoProducto, onEditarProduc
 
 export default function BodegonCocoApp() {
   const [cargando, setCargando] = useState(true);
-  const [productos, setProductos] = useState(SEED_PRODUCTOS);
+  const [productos, setProductos] = useState([]);
   const [mesas, setMesas] = useState([]);
   const [rol, setRol] = useState('mozo');
   const [vista, setVista] = useState('grid');
@@ -581,7 +574,7 @@ export default function BodegonCocoApp() {
   const [avisoMesas, setAvisoMesas] = useState('');
   const [, setTick] = useState(0);
 
-  // 1. Guardar cambios de mesa en Supabase
+  // Guardar estado de la mesa en Supabase
   const guardarMesaDB = async (mesaId, nuevoEstado, nuevoPedido) => {
     try {
       const { error } = await supabase
@@ -595,7 +588,7 @@ export default function BodegonCocoApp() {
       if (error) throw error;
       setErrorSync(false);
     } catch (e) {
-      console.error("Error guardando en Supabase:", e);
+      console.error("Error guardando mesa en Supabase:", e);
       setErrorSync(true);
     }
   };
@@ -603,14 +596,14 @@ export default function BodegonCocoApp() {
   useEffect(() => {
     const cargarInicial = async () => {
       try {
-        const { data: mesasDB, error: errorMesas } = await supabase
-          .from('mesas')
-          .select('*')
-          .order('id');
+        // 1. Cargar Mesas
+        const { data: mesasDB } = await supabase.from('mesas').select('*').order('id');
+        if (mesasDB) setMesas(mesasDB);
 
-        if (!errorMesas && mesasDB) {
-          setMesas(mesasDB);
-        }
+        // 2. Cargar Productos desde Supabase
+        const { data: productosDB } = await supabase.from('productos').select('*').order('id');
+        if (productosDB) setProductos(productosDB);
+
       } catch (err) {
         console.error("Error al cargar datos iniciales:", err);
       } finally {
@@ -620,8 +613,8 @@ export default function BodegonCocoApp() {
 
     cargarInicial();
 
-    // 2. Escuchar cambios en vivo (Sincronización en tiempo real)
-    const canal = supabase
+    // Sincronizar MESAS en tiempo real
+    const canalMesas = supabase
       .channel('mesas-realtime')
       .on(
         'postgres_changes',
@@ -640,8 +633,32 @@ export default function BodegonCocoApp() {
       )
       .subscribe();
 
+    // Sincronizar PRODUCTOS en tiempo real
+    const canalProductos = supabase
+      .channel('productos-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'productos' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setProductos((prev) => {
+              if (prev.some(p => p.id === payload.new.id)) return prev;
+              return [...prev, payload.new];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setProductos((prev) =>
+              prev.map((p) => (p.id === payload.new.id ? payload.new : p))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setProductos((prev) => prev.filter((p) => p.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(canal);
+      supabase.removeChannel(canalMesas);
+      supabase.removeChannel(canalProductos);
     };
   }, []);
 
@@ -675,7 +692,6 @@ export default function BodegonCocoApp() {
     
     let nuevoPedido;
     if (mesaActual.pedido) {
-      // Ya tiene pedido, lo clonamos para modificarlo
       nuevoPedido = { ...mesaActual.pedido, items: [...mesaActual.pedido.items] };
       const idx = nuevoPedido.items.findIndex((it) => it.productId === producto.id);
       if (idx >= 0) {
@@ -684,17 +700,13 @@ export default function BodegonCocoApp() {
         nuevoPedido.items.push({ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 });
       }
     } else {
-      // Es el primer item que se agrega
       nuevoPedido = {
         abiertoEn: Date.now(),
         items: [{ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 }]
       };
     }
 
-    // 1. Actualizar local
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, estado: 'Ocupada', pedido: nuevoPedido } : m));
-    
-    // 2. Enviar a Supabase
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
 
     if (eraLibre) {
@@ -713,10 +725,7 @@ export default function BodegonCocoApp() {
 
     const nuevoPedido = { ...mesaActual.pedido, items: itemsActualizados };
 
-    // 1. Actualizar local
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
-    
-    // 2. Enviar a Supabase
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
   }
 
@@ -727,18 +736,12 @@ export default function BodegonCocoApp() {
     const itemsActualizados = mesaActual.pedido.items.filter((it) => it.productId !== productId);
     const nuevoPedido = { ...mesaActual.pedido, items: itemsActualizados };
 
-    // 1. Actualizar local
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
-    
-    // 2. Enviar a Supabase
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
   }
 
   function cobrarYCerrar() {
-    // 1. Actualizar local
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, estado: 'Libre', pedido: null } : m));
-    
-    // 2. Enviar a Supabase
     guardarMesaDB(mesaActivaId, 'Libre', null);
     
     setModal(null);
@@ -766,33 +769,41 @@ export default function BodegonCocoApp() {
     if (vista === 'admin') setVista('grid');
   }
 
-  function guardarProducto(datos) {
-    let next;
+  // 🚀 CREAR / EDITAR PRODUCTO EN SUPABASE
+  async function guardarProducto(datos) {
     if (productoEditando) {
-      next = productos.map((p) => (p.id === productoEditando.id ? { ...p, ...datos } : p));
+      // Actualizar localmente
+      setProductos((prev) => prev.map((p) => (p.id === productoEditando.id ? { ...p, ...datos } : p)));
+      // Guardar en Supabase
+      const { error } = await supabase.from('productos').update(datos).eq('id', productoEditando.id);
+      if (error) console.error("Error al actualizar producto:", error);
     } else {
-      const nuevoId = Math.max(0, ...productos.map((p) => p.id)) + 1;
-      next = [...productos, { id: nuevoId, ...datos }];
+      // Guardar nuevo en Supabase
+      const { data, error } = await supabase.from('productos').insert([datos]).select();
+      if (data && data.length > 0) {
+        setProductos((prev) => [...prev, data[0]]);
+      }
+      if (error) console.error("Error al agregar producto:", error);
     }
-    setProductos(next); // Para los productos por ahora usamos el estado local
     setModal(null);
     setProductoEditando(null);
   }
 
-  function eliminarProducto(id) {
-    setProductos(productos.filter((p) => p.id !== id));
+  // 🚀 ELIMINAR PRODUCTO EN SUPABASE
+  async function eliminarProducto(id) {
+    setProductos((prev) => prev.filter((p) => p.id !== id));
+    const { error } = await supabase.from('productos').delete().eq('id', id);
+    if (error) console.error("Error al eliminar producto:", error);
   }
 
+  // 🚀 AGREGAR MESA EN SUPABASE
   async function agregarMesa() {
     const nuevoNumero = mesas.length > 0 ? Math.max(...mesas.map((m) => m.numero)) + 1 : 1;
     const nuevoId = mesas.length > 0 ? Math.max(...mesas.map((m) => m.id)) + 1 : 1;
     
     const nuevaMesa = { id: nuevoId, numero: nuevoNumero, capacidad: 4, estado: 'Libre', pedido: null };
     
-    // Actualización local rápida
     setMesas((prev) => [...prev, nuevaMesa]);
-    
-    // Impactar en DB
     const { error } = await supabase.from('mesas').insert([nuevaMesa]);
     if (error) {
       console.error("Error agregando mesa a Supabase:", error);
@@ -800,6 +811,7 @@ export default function BodegonCocoApp() {
     }
   }
 
+  // 🚀 ELIMINAR MESA EN SUPABASE
   async function eliminarMesa(id) {
     const m = mesas.find((x) => x.id === id);
     if (m && m.estado === 'Ocupada') {
@@ -808,10 +820,7 @@ export default function BodegonCocoApp() {
       return;
     }
     
-    // Actualización local rápida
     setMesas((prev) => prev.filter((x) => x.id !== id));
-    
-    // Impactar en DB
     const { error } = await supabase.from('mesas').delete().eq('id', id);
     if (error) {
       console.error("Error eliminando mesa de Supabase:", error);
