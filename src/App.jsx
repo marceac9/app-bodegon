@@ -150,17 +150,13 @@ const STYLES = `
 .bc-app button, .bc-app input { font-family: inherit; }
 .bc-app button:focus-visible, .bc-app input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-@media (prefers-reduced-motion: reduce) {
-  .bc-app * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-}
-
 @media print {
-  /* 1. Saca la URL, fecha y números de página automáticos del navegador */
-  @page { margin: 0; }
+  /* Margen para que el rodillo no muerda el papel */
+  @page { margin: 5mm 0 0 0; }
   
-  /* 2. Limpia el fondo y quita los bloqueos de la ventana modal */
   body { background: white; }
   body * { visibility: hidden; }
+  
   .modal-overlay, .modal-sheet {
     position: absolute !important;
     top: 0 !important;
@@ -170,15 +166,47 @@ const STYLES = `
     background: transparent !important;
   }
   
-  /* 3. Trae el ticket al frente y le da el tamaño de la ticketera (78mm) */
-  #recibo-print, #recibo-print * { visibility: visible; }
+  /* 1. Base Arial Fuerte para el Título, Fecha y Líneas */
+  #recibo-print, #recibo-print * { 
+    visibility: visible; 
+    font-family: Arial, Helvetica, sans-serif !important; 
+    color: black !important;
+    -webkit-font-smoothing: none !important; 
+    text-rendering: crispEdges !important; 
+  }
+  
   #recibo-print { 
     position: absolute; 
     top: 0; 
     left: 0; 
-    width: 78mm; 
-    padding: 4mm; 
+    width: 74mm; 
+    padding: 5mm; 
+    margin: 0;
     border: none; 
+  }
+
+  .bc-display {
+    font-size: 22px !important;
+    font-weight: 400 !important;
+  }
+
+  /* 2. MAGIA: Los ítems vuelven a la tipografía "ticketera antigua" que te gustaba */
+  .ticket-row {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-weight: 400 !important;
+    font-size: 13.5px !important;
+    padding: 2px 0 !important;
+  }
+  .ticket-row span {
+    font-family: inherit !important;
+  }
+  
+  /* 3. El renglón del TOTAL vuelve a Arial grueso para destacar gigante */
+  .ticket-row:last-of-type, .ticket-row:last-of-type span {
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-weight: 900 !important;
+    font-size: 18px !important;
+    padding-top: 6px !important;
   }
 }
 `;
