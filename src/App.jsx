@@ -155,9 +155,31 @@ const STYLES = `
 }
 
 @media print {
+  /* 1. Saca la URL, fecha y números de página automáticos del navegador */
+  @page { margin: 0; }
+  
+  /* 2. Limpia el fondo y quita los bloqueos de la ventana modal */
+  body { background: white; }
   body * { visibility: hidden; }
+  .modal-overlay, .modal-sheet {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    background: transparent !important;
+  }
+  
+  /* 3. Trae el ticket al frente y le da el tamaño de la ticketera (78mm) */
   #recibo-print, #recibo-print * { visibility: visible; }
-  #recibo-print { position: fixed; top: 0; left: 0; width: 78mm; padding: 4mm; border: none; }
+  #recibo-print { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 78mm; 
+    padding: 4mm; 
+    border: none; 
+  }
 }
 `;
 
