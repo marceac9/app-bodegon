@@ -2,7 +2,9 @@ import { supabase } from './supabaseClient';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   ArrowLeft, Lock, Plus, Minus, Trash2, Printer, X, Users, Check,
-  Loader2, Pencil, ChefHat, Wine, UtensilsCrossed, ShieldCheck
+  Loader2, Pencil, ChefHat, Wine, UtensilsCrossed, ShieldCheck,
+  HandCoins, CreditCard, QrCode, CalendarDays, TrendingUp, ClipboardList,
+  Download
 } from 'lucide-react';
 
 const ADMIN_PIN = '1234';
@@ -123,6 +125,11 @@ const STYLES = `
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
 .btn-outline-dark { background: transparent; border: 1.5px solid rgba(255,255,255,0.35); color: var(--surface); padding: 12px 14px; }
 
+/* Estilos Admin y Ventas */
+.admin-tabs { display: flex; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 12px; margin-bottom: 20px; }
+.admin-tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .03em; font-size: 13px; cursor: pointer; color: var(--text-muted); }
+.admin-tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
 .admin-row { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
 .admin-row:last-child { border-bottom: none; }
 .icon-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
@@ -131,10 +138,23 @@ const STYLES = `
 .mesa-chip-admin button { width: 20px; height: 20px; border-radius: 50%; border: none; background: var(--ocupada-bg); color: var(--ocupada); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
 .aviso { background: var(--ocupada-bg); color: var(--ocupada); padding: 9px 12px; border-radius: 999px; font-size: 12.5px; margin-bottom: 12px; }
 
+/* Estilos de Pagos */
+.payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+.payment-btn { border: 1.5px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+.payment-btn span { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.03em; }
+.payment-btn.active { border-color: var(--accent); background: #FAF5EA; color: var(--ink); box-shadow: 0 4px 12px rgba(198,146,46,0.15); transform: translateY(-2px); }
+
+/* Estilos de Resumen Historial */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--ink); color: var(--surface); padding: 16px; border-radius: 16px; position: relative; overflow: hidden; }
+.stat-label { font-family: 'Oswald', sans-serif; font-size: 12px; opacity: 0.7; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stat-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.venta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+
 .form-field { margin-bottom: 12px; }
 .form-field label { display: block; font-family: 'Oswald', sans-serif; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
-.form-field input { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--border); font-size: 14.5px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text); }
-.form-field input:focus { outline: none; border-color: var(--accent); }
+.form-field input, .form-field select { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--border); font-size: 14.5px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text); }
+.form-field input:focus, .form-field select:focus { outline: none; border-color: var(--accent); }
 
 .pin-input { width: 100%; font-size: 30px; letter-spacing: 16px; text-align: center; padding: 14px 10px 14px 20px; border-radius: 12px; border: 1.5px solid var(--border); font-family: 'Oswald', sans-serif; color: var(--text); background: var(--surface); }
 .pin-input:focus { outline: none; border-color: var(--accent); }
@@ -144,29 +164,24 @@ const STYLES = `
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 .ticket { font-family: 'Inter', monospace; background: #fff; color: #171310; padding: 16px; border-radius: 8px; border: 1px dashed #B8AF9C; }
-.ticket-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; gap: 10px; }
-.ticket-divider { border-top: 1px dashed #B8AF9C; margin: 8px 0; }
 
-.bc-app button, .bc-app input { font-family: inherit; }
-.bc-app button:focus-visible, .bc-app input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bc-app button, .bc-app input, .bc-app select { font-family: inherit; }
+.bc-app button:focus-visible, .bc-app input:focus-visible, .bc-app select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bc-app * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
 
 @media print {
-  /* Margen para que el rodillo no muerda el papel */
   @page { margin: 5mm 0 0 0; }
-  
   body { background: white; }
   body * { visibility: hidden; }
   
   .modal-overlay, .modal-sheet {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    overflow: visible !important;
-    transform: none !important;
-    background: transparent !important;
+    position: absolute !important; top: 0 !important; left: 0 !important;
+    overflow: visible !important; transform: none !important; background: transparent !important;
   }
   
-  /* 1. Base Arial Fuerte para el Título, Fecha y Líneas */
   #recibo-print, #recibo-print * { 
     visibility: visible; 
     font-family: Arial, Helvetica, sans-serif !important; 
@@ -174,45 +189,40 @@ const STYLES = `
     -webkit-font-smoothing: none !important; 
     text-rendering: crispEdges !important; 
   }
-  
   #recibo-print { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 74mm; 
-    padding: 5mm; 
-    margin: 0;
-    border: none; 
+    position: absolute; top: 0; left: 0; width: 74mm; padding: 5mm; margin: 0; border: none; 
   }
+  .bc-display { font-size: 22px !important; font-weight: 800 !important; }
 
-  .bc-display {
-    font-size: 22px !important;
-    font-weight: 400 !important;
-  }
-
-  /* 2. MAGIA: Los ítems vuelven a la tipografía "ticketera antigua" que te gustaba */
   .ticket-row {
-    font-family: 'Courier New', Courier, monospace !important;
-    font-weight: 400 !important;
-    font-size: 13.5px !important;
-    padding: 2px 0 !important;
+    display: flex !important; justify-content: space-between !important;
+    font-family: 'Courier New', Courier, monospace !important; font-weight: 600 !important;
+    font-size: 13.5px !important; padding: 2px 0 !important;
   }
-  .ticket-row span {
-    font-family: inherit !important;
-  }
+  .ticket-row span { font-family: inherit !important; }
   
-  /* 3. El renglón del TOTAL vuelve a Arial grueso para destacar gigante */
   .ticket-row:last-of-type, .ticket-row:last-of-type span {
-    font-family: Arial, Helvetica, sans-serif !important;
-    font-weight: 900 !important;
-    font-size: 18px !important;
-    padding-top: 6px !important;
+    font-family: Arial, Helvetica, sans-serif !important; font-weight: 900 !important;
+    font-size: 18px !important; padding-top: 6px !important;
   }
+  .ticket-divider { border-top: 1px dashed #B8AF9C !important; margin: 8px 0 !important; }
 }
 `;
 
 function formatMoney(n) {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
+}
+
+function formatearFecha(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatearMes(yyyy_mm) {
+  const [year, month] = yyyy_mm.split('-');
+  const date = new Date(year, month - 1, 1);
+  const nombre = date.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+  return nombre.charAt(0).toUpperCase() + nombre.slice(1);
 }
 
 function tiempoAbierta(abiertoEn) {
@@ -245,7 +255,7 @@ function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
       <Loader2 size={26} className="animate-spin" style={{ color: 'var(--accent)' }} />
-      <div style={{ fontFamily: 'Oswald', fontSize: 12.5, letterSpacing: '.06em', color: 'var(--text-muted)' }}>CARGANDO MESAS Y MENÚ…</div>
+      <div style={{ fontFamily: 'Oswald', fontSize: 12.5, letterSpacing: '.06em', color: 'var(--text-muted)' }}>CARGANDO DATOS…</div>
     </div>
   );
 }
@@ -444,7 +454,7 @@ function PinModal({ pinInput, setPinInput, pinError, onConfirmar, onClose }) {
   return (
     <ModalWrapper titulo="Acceso admin" onClose={onClose}>
       <p style={{ fontSize: 13.5, color: 'var(--text-muted)', marginBottom: 14, marginTop: 0 }}>
-        Ingresá el PIN de administrador para editar productos, precios y mesas.
+        Ingresá el PIN de administrador para editar productos y ver historial de ventas.
       </p>
       <input
         type="password"
@@ -496,19 +506,106 @@ function ReciboModal({ mesa, onClose, onImprimir }) {
 }
 
 function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
-  const total = mesa.pedido ? mesa.pedido.items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0) : 0;
+  const [metodo, setMetodo] = useState('Efectivo');
+  
+  const totalOrig = mesa.pedido ? mesa.pedido.items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0) : 0;
+  
+  let descuento = 0;
+  let recargo = 0;
+  
+  if (metodo === 'Efectivo') descuento = totalOrig * 0.10;
+  if (metodo === 'Crédito') recargo = totalOrig * 0.10;
+  if (metodo === 'QR') recargo = totalOrig * 0.05;
+
+  const totalFinal = totalOrig - descuento + recargo;
+  const ajusteBD = descuento - recargo;
+
   return (
-    <ModalWrapper titulo="Cobrar mesa" onClose={onCancelar}>
+    <ModalWrapper titulo="Método de pago" onClose={onCancelar}>
+      <div className="payment-grid">
+        <button className={`payment-btn ${metodo === 'Efectivo' ? 'active' : ''}`} onClick={() => setMetodo('Efectivo')}>
+          <HandCoins size={28} />
+          <span>Efectivo (10% OFF)</span>
+        </button>
+        <button className={`payment-btn ${metodo === 'Débito' ? 'active' : ''}`} onClick={() => setMetodo('Débito')}>
+          <CreditCard size={28} />
+          <span>Débito</span>
+        </button>
+        <button className={`payment-btn ${metodo === 'Crédito' ? 'active' : ''}`} onClick={() => setMetodo('Crédito')}>
+          <CreditCard size={28} />
+          <span>Crédito (+10%)</span>
+        </button>
+        <button className={`payment-btn ${metodo === 'QR' ? 'active' : ''}`} onClick={() => setMetodo('QR')}>
+          <QrCode size={28} />
+          <span>QR (+5%)</span>
+        </button>
+      </div>
+
+      <div style={{ background: 'var(--bg)', padding: 14, borderRadius: 12, margin: '20px 0 16px' }}>
+         {metodo !== 'Débito' && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>
+                <span>Subtotal:</span>
+                <span style={{ textDecoration: 'line-through' }}>{formatMoney(totalOrig)}</span>
+              </div>
+              
+              {metodo === 'Efectivo' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--libre)', marginBottom: 8, fontWeight: 600 }}>
+                  <span>Descuento 10%:</span>
+                  <span>-{formatMoney(descuento)}</span>
+                </div>
+              )}
+              
+              {metodo === 'Crédito' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--ocupada)', marginBottom: 8, fontWeight: 600 }}>
+                  <span>Recargo 10%:</span>
+                  <span>+{formatMoney(recargo)}</span>
+                </div>
+              )}
+              
+              {metodo === 'QR' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--ocupada)', marginBottom: 8, fontWeight: 600 }}>
+                  <span>Recargo 5%:</span>
+                  <span>+{formatMoney(recargo)}</span>
+                </div>
+              )}
+            </>
+         )}
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: metodo === 'Débito' ? 0 : 8 }}>
+            <span style={{ fontFamily: 'Oswald', fontWeight: 600, fontSize: 16 }}>TOTAL A COBRAR:</span>
+            <span className="bc-display" style={{ fontSize: 26, fontWeight: 700, color: 'var(--ink)' }}>{formatMoney(totalFinal)}</span>
+         </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancelar}>Cancelar</button>
+        <button className="btn btn-success" style={{ flex: 1 }} onClick={() => onConfirmar(metodo, totalOrig, ajusteBD, totalFinal)}>
+          <Check size={16} /> Confirmar Venta
+        </button>
+      </div>
+    </ModalWrapper>
+  );
+}
+
+function ConfirmarEliminarVentaModal({ venta, onCancelar, onConfirmar }) {
+  if (!venta) return null;
+  return (
+    <ModalWrapper titulo="Eliminar Venta" onClose={onCancelar}>
       <p style={{ fontSize: 14, marginBottom: 4, marginTop: 0 }}>
-        Vas a cerrar la <strong>Mesa {mesa.numero}</strong> con un total de:
+        ¿Estás seguro de que querés borrar este cobro del sistema?
       </p>
-      <div className="bc-display" style={{ fontSize: 28, fontWeight: 700, margin: '8px 0 18px' }}>{formatMoney(total)}</div>
+      <div style={{ margin: '16px 0', padding: 14, background: 'var(--ocupada-bg)', borderRadius: 12, color: 'var(--ocupada)' }}>
+        <div style={{ fontWeight: 600, fontSize: 15 }}>{venta.metodo_pago}</div>
+        <div className="bc-display" style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>{formatMoney(venta.total_final)}</div>
+      </div>
       <p style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 18 }}>
-        La mesa va a quedar libre y el pedido se va a borrar de la pantalla.
+        El monto se va a restar automáticamente de la caja del día y del mes. Esta acción no se puede deshacer.
       </p>
       <div style={{ display: 'flex', gap: 10 }}>
         <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancelar}>Cancelar</button>
-        <button className="btn btn-success" style={{ flex: 1 }} onClick={onConfirmar}><Check size={16} /> Confirmar</button>
+        <button className="btn btn-primary" style={{ flex: 1, background: 'var(--ocupada)', color: '#fff' }} onClick={onConfirmar}>
+          <Trash2 size={16} /> Eliminar
+        </button>
       </div>
     </ModalWrapper>
   );
@@ -551,58 +648,184 @@ function ProductoFormModal({ producto, categoriasExistentes, onGuardar, onClose 
   );
 }
 
-function PanelAdmin({ productos, mesas, onSalir, onNuevoProducto, onEditarProducto, onEliminarProducto, onAgregarMesa, onEliminarMesa, avisoMesas }) {
+// 🚀 PANEL ADMIN: CON SELECTOR DE MESES
+function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEditarProducto, onEliminarProducto, onAgregarMesa, onEliminarMesa, avisoMesas, onAbrirEliminarVenta }) {
+  const [tab, setTab] = useState('menu'); 
   const grupos = agruparPorCategoria(productos);
+
+  // 1. Estado para el filtro de mes (Por defecto, el mes actual: "2024-08")
+  const [mesFiltro, setMesFiltro] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  // 2. Extraer los meses únicos que existen en el historial de ventas
+  const mesesDisponibles = useMemo(() => {
+    const setMeses = new Set(ventas.map(v => {
+      const d = new Date(v.creado_en);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }));
+    // Aseguramos que el mes actual siempre esté en la lista aunque no haya ventas
+    const d = new Date();
+    setMeses.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    // Los ordenamos del más nuevo al más viejo
+    return Array.from(setMeses).sort().reverse();
+  }, [ventas]);
+
+  // 3. Filtrar las ventas para que solo muestre las del mes seleccionado
+  const ventasMes = ventas.filter(v => {
+    const d = new Date(v.creado_en);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesFiltro;
+  });
+
+  // 4. La caja de "HOY" siempre busca el día calendario exacto
+  const ahora = new Date();
+  const ventasHoy = ventas.filter(v => new Date(v.creado_en).toDateString() === ahora.toDateString());
+
+  const totalMes = ventasMes.reduce((acc, v) => acc + v.total_final, 0);
+  const totalHoy = ventasHoy.reduce((acc, v) => acc + v.total_final, 0);
+
+  const exportarExcel = () => {
+    const cabeceras = ['Fecha', 'Hora', 'Metodo de Pago', 'Subtotal', 'Ajuste (Descuento/Recargo)', 'Total Final'];
+    const filas = ventasMes.map(v => {
+      const d = new Date(v.creado_en);
+      const fecha = d.toLocaleDateString('es-AR');
+      const hora = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      return [
+        fecha,
+        hora,
+        v.metodo_pago,
+        v.total_original,
+        v.descuento * -1, 
+        v.total_final
+      ].join(';'); 
+    });
+
+    const csvContent = "\uFEFF" + [cabeceras.join(';'), ...filas].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Ventas_Bodegon_${mesFiltro}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div style={{ padding: 16, paddingBottom: 40 }}>
-      <button className="btn btn-outline" style={{ width: '100%', marginBottom: 20 }} onClick={onSalir}>Salir de modo admin</button>
+      <button className="btn btn-outline" style={{ width: '100%', marginBottom: 16 }} onClick={onSalir}>Salir de modo admin</button>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <div className="bc-display" style={{ fontSize: 15, fontWeight: 600 }}>Productos y precios</div>
-        <button className="btn btn-primary" style={{ padding: '8px 12px', fontSize: 12 }} onClick={onNuevoProducto}>
-          <Plus size={14} /> Nuevo
+      <div className="admin-tabs">
+        <button className={`admin-tab ${tab === 'menu' ? 'active' : ''}`} onClick={() => setTab('menu')}>
+          <ClipboardList size={16} style={{display:'inline', verticalAlign:'middle', marginRight:4, marginTop:-2}}/> Menú y Mesas
+        </button>
+        <button className={`admin-tab ${tab === 'historial' ? 'active' : ''}`} onClick={() => setTab('historial')}>
+          <TrendingUp size={16} style={{display:'inline', verticalAlign:'middle', marginRight:4, marginTop:-2}}/> Ventas
         </button>
       </div>
 
-      {Object.keys(grupos).length === 0 && (
-        <div style={{ padding: '16px 0', color: 'var(--text-muted)', fontSize: 14 }}>No hay productos cargados todavía.</div>
-      )}
-
-      {Object.entries(grupos).map(([cat, items]) => (
-        <div key={cat}>
-          <div className="section-label">{cat}</div>
-          {items.map((p) => (
-            <div key={p.id} className="admin-row">
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{p.nombre}</div>
-                <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{formatMoney(p.precio)}</div>
-              </div>
-              <button className="icon-btn" onClick={() => onEditarProducto(p)} aria-label={`Editar ${p.nombre}`}><Pencil size={15} /></button>
-              <button className="icon-btn icon-btn-danger" onClick={() => onEliminarProducto(p.id)} aria-label={`Eliminar ${p.nombre}`}><Trash2 size={15} /></button>
+      {tab === 'menu' && (
+        <div style={{ animation: 'slideUp .25s ease' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <div className="bc-display" style={{ fontSize: 15, fontWeight: 600 }}>Productos y precios</div>
+            <button className="btn btn-primary" style={{ padding: '8px 12px', fontSize: 12 }} onClick={onNuevoProducto}>
+              <Plus size={14} /> Nuevo
+            </button>
+          </div>
+          {Object.keys(grupos).length === 0 && <div style={{ padding: '16px 0', color: 'var(--text-muted)', fontSize: 14 }}>No hay productos cargados todavía.</div>}
+          {Object.entries(grupos).map(([cat, items]) => (
+            <div key={cat}>
+              <div className="section-label">{cat}</div>
+              {items.map((p) => (
+                <div key={p.id} className="admin-row">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{p.nombre}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{formatMoney(p.precio)}</div>
+                  </div>
+                  <button className="icon-btn" onClick={() => onEditarProducto(p)} aria-label={`Editar ${p.nombre}`}><Pencil size={15} /></button>
+                  <button className="icon-btn icon-btn-danger" onClick={() => onEliminarProducto(p.id)} aria-label={`Eliminar ${p.nombre}`}><Trash2 size={15} /></button>
+                </div>
+              ))}
             </div>
           ))}
-        </div>
-      ))}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '26px 0 10px' }}>
-        <div className="bc-display" style={{ fontSize: 15, fontWeight: 600 }}>Mesas</div>
-        <button className="btn btn-primary" style={{ padding: '8px 12px', fontSize: 12 }} onClick={onAgregarMesa}>
-          <Plus size={14} /> Agregar mesa
-        </button>
-      </div>
-      {avisoMesas && <div className="aviso">{avisoMesas}</div>}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {mesas.map((m) => (
-          <div key={m.id} className="mesa-chip-admin">
-            <span>Mesa {m.numero} · {m.capacidad}p</span>
-            <button onClick={() => onEliminarMesa(m.id)} aria-label={`Eliminar mesa ${m.numero}`}><X size={13} /></button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '26px 0 10px' }}>
+            <div className="bc-display" style={{ fontSize: 15, fontWeight: 600 }}>Mesas</div>
+            <button className="btn btn-primary" style={{ padding: '8px 12px', fontSize: 12 }} onClick={onAgregarMesa}>
+              <Plus size={14} /> Agregar mesa
+            </button>
           </div>
-        ))}
-      </div>
+          {avisoMesas && <div className="aviso">{avisoMesas}</div>}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {mesas.map((m) => (
+              <div key={m.id} className="mesa-chip-admin">
+                <span>Mesa {m.numero} · {m.capacidad}p</span>
+                <button onClick={() => onEliminarMesa(m.id)} aria-label={`Eliminar mesa ${m.numero}`}><X size={13} /></button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      <div style={{ marginTop: 30, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-        Los cambios de productos, precios y mesas se guardan en la nube en tiempo real para todos los dispositivos conectados.
-      </div>
+      {tab === 'historial' && (
+        <div style={{ animation: 'slideUp .25s ease' }}>
+          
+          {/* 🚀 SELECTOR DE MESES */}
+          <div className="form-field" style={{ marginBottom: 16 }}>
+            <label>Filtrar historial por mes</label>
+            <select value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)}>
+              {mesesDisponibles.map(m => (
+                <option key={m} value={m}>{formatearMes(m)}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="stats-grid">
+            <div className="stat-card" style={{ background: 'var(--libre)'}}>
+              <div className="stat-label">Caja de Hoy (Real)</div>
+              <div className="bc-display stat-val">{formatMoney(totalHoy)}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Total Mes Selec.</div>
+              <div className="bc-display stat-val">{formatMoney(totalMes)}</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 }}>
+             <div className="section-label" style={{ margin: 0 }}>Ventas del mes</div>
+             <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: 12 }} onClick={exportarExcel} disabled={ventasMes.length === 0}>
+               <Download size={14} /> Exportar Excel
+             </button>
+          </div>
+          
+          {ventasMes.length === 0 ? (
+            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay ventas en este mes.</div>
+          ) : (
+            ventasMes.slice(0, 30).map(v => (
+              <div key={v.id} className="venta-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{v.metodo_pago}</div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="bc-display" style={{ fontWeight: 600, fontSize: 16, color: 'var(--ink)' }}>{formatMoney(v.total_final)}</div>
+                    <button className="icon-btn-ghost" style={{ color: 'var(--ocupada)', padding: 4 }} onClick={() => onAbrirEliminarVenta(v)} aria-label="Eliminar venta">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
+                  <div><CalendarDays size={11} style={{display:'inline', marginBottom:-2}}/> {formatearFecha(v.creado_en)}</div>
+                  {v.descuento > 0 && <div style={{color: 'var(--libre)', fontWeight: 500}}>Desc: {formatMoney(v.descuento)}</div>}
+                  {v.descuento < 0 && <div style={{color: 'var(--ocupada)', fontWeight: 500}}>Recargo: {formatMoney(Math.abs(v.descuento))}</div>}
+                </div>
+              </div>
+            ))
+          )}
+          {ventasMes.length > 30 && <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>Mostrando los últimos 30 registros de este mes.</div>}
+        </div>
+      )}
     </div>
   );
 }
@@ -611,12 +834,14 @@ export default function BodegonCocoApp() {
   const [cargando, setCargando] = useState(true);
   const [productos, setProductos] = useState([]);
   const [mesas, setMesas] = useState([]);
+  const [ventas, setVentas] = useState([]); 
   const [rol, setRol] = useState('mozo');
   const [vista, setVista] = useState('grid');
   const [mesaActivaId, setMesaActivaId] = useState(null);
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todas');
   const [modal, setModal] = useState(null);
   const [productoEditando, setProductoEditando] = useState(null);
+  const [ventaAEliminar, setVentaAEliminar] = useState(null); 
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
   const [justChanged, setJustChanged] = useState(null);
@@ -624,17 +849,9 @@ export default function BodegonCocoApp() {
   const [avisoMesas, setAvisoMesas] = useState('');
   const [, setTick] = useState(0);
 
-  // Guardar estado de la mesa en Supabase
   const guardarMesaDB = async (mesaId, nuevoEstado, nuevoPedido) => {
     try {
-      const { error } = await supabase
-        .from('mesas')
-        .update({
-          estado: nuevoEstado,
-          pedido: nuevoPedido
-        })
-        .eq('id', mesaId);
-
+      const { error } = await supabase.from('mesas').update({ estado: nuevoEstado, pedido: nuevoPedido }).eq('id', mesaId);
       if (error) throw error;
       setErrorSync(false);
     } catch (e) {
@@ -646,13 +863,14 @@ export default function BodegonCocoApp() {
   useEffect(() => {
     const cargarInicial = async () => {
       try {
-        // 1. Cargar Mesas
         const { data: mesasDB } = await supabase.from('mesas').select('*').order('id');
         if (mesasDB) setMesas(mesasDB);
 
-        // 2. Cargar Productos desde Supabase
         const { data: productosDB } = await supabase.from('productos').select('*').order('id');
         if (productosDB) setProductos(productosDB);
+
+        const { data: ventasDB } = await supabase.from('ventas').select('*').order('creado_en', { ascending: false });
+        if (ventasDB) setVentas(ventasDB);
 
       } catch (err) {
         console.error("Error al cargar datos iniciales:", err);
@@ -663,52 +881,27 @@ export default function BodegonCocoApp() {
 
     cargarInicial();
 
-    // Sincronizar MESAS en tiempo real
-    const canalMesas = supabase
-      .channel('mesas-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'mesas' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setMesas((prev) => [...prev, payload.new]);
-          } else if (payload.eventType === 'UPDATE') {
-            setMesas((prev) =>
-              prev.map((m) => (m.id === payload.new.id ? payload.new : m))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setMesas((prev) => prev.filter((m) => m.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
+    const canalMesas = supabase.channel('mesas-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'mesas' }, (payload) => {
+      if (payload.eventType === 'INSERT') setMesas((prev) => [...prev, payload.new]);
+      else if (payload.eventType === 'UPDATE') setMesas((prev) => prev.map((m) => (m.id === payload.new.id ? payload.new : m)));
+      else if (payload.eventType === 'DELETE') setMesas((prev) => prev.filter((m) => m.id !== payload.old.id));
+    }).subscribe();
 
-    // Sincronizar PRODUCTOS en tiempo real
-    const canalProductos = supabase
-      .channel('productos-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'productos' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setProductos((prev) => {
-              if (prev.some(p => p.id === payload.new.id)) return prev;
-              return [...prev, payload.new];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setProductos((prev) =>
-              prev.map((p) => (p.id === payload.new.id ? payload.new : p))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setProductos((prev) => prev.filter((p) => p.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
+    const canalProductos = supabase.channel('productos-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'productos' }, (payload) => {
+      if (payload.eventType === 'INSERT') setProductos((prev) => prev.some(p => p.id === payload.new.id) ? prev : [...prev, payload.new]);
+      else if (payload.eventType === 'UPDATE') setProductos((prev) => prev.map((p) => (p.id === payload.new.id ? payload.new : p)));
+      else if (payload.eventType === 'DELETE') setProductos((prev) => prev.filter((p) => p.id !== payload.old.id));
+    }).subscribe();
+
+    const canalVentas = supabase.channel('ventas-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, (payload) => {
+      if (payload.eventType === 'INSERT') setVentas((prev) => [payload.new, ...prev]);
+      else if (payload.eventType === 'DELETE') setVentas((prev) => prev.filter(v => v.id !== payload.old.id));
+    }).subscribe();
 
     return () => {
       supabase.removeChannel(canalMesas);
       supabase.removeChannel(canalProductos);
+      supabase.removeChannel(canalVentas);
     };
   }, []);
 
@@ -724,16 +917,8 @@ export default function BodegonCocoApp() {
 
   const mesaActiva = useMemo(() => mesas.find((m) => m.id === mesaActivaId) || null, [mesas, mesaActivaId]);
 
-  function abrirMesa(mesaId) {
-    setMesaActivaId(mesaId);
-    setCategoriaFiltro('Todas');
-    setVista('mesa');
-  }
-
-  function volverAGrid() {
-    setVista('grid');
-    setMesaActivaId(null);
-  }
+  function abrirMesa(mesaId) { setMesaActivaId(mesaId); setCategoriaFiltro('Todas'); setVista('mesa'); }
+  function volverAGrid() { setVista('grid'); setMesaActivaId(null); }
 
   function agregarItem(producto) {
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
@@ -744,37 +929,22 @@ export default function BodegonCocoApp() {
     if (mesaActual.pedido) {
       nuevoPedido = { ...mesaActual.pedido, items: [...mesaActual.pedido.items] };
       const idx = nuevoPedido.items.findIndex((it) => it.productId === producto.id);
-      if (idx >= 0) {
-        nuevoPedido.items[idx] = { ...nuevoPedido.items[idx], cantidad: nuevoPedido.items[idx].cantidad + 1 };
-      } else {
-        nuevoPedido.items.push({ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 });
-      }
+      if (idx >= 0) nuevoPedido.items[idx] = { ...nuevoPedido.items[idx], cantidad: nuevoPedido.items[idx].cantidad + 1 };
+      else nuevoPedido.items.push({ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 });
     } else {
-      nuevoPedido = {
-        abiertoEn: Date.now(),
-        items: [{ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 }]
-      };
+      nuevoPedido = { abiertoEn: Date.now(), items: [{ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 }] };
     }
 
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, estado: 'Ocupada', pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
-
-    if (eraLibre) {
-      setJustChanged(mesaActivaId);
-      setTimeout(() => setJustChanged(null), 450);
-    }
+    if (eraLibre) { setJustChanged(mesaActivaId); setTimeout(() => setJustChanged(null), 450); }
   }
 
   function cambiarCantidad(productId, delta) {
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
     if (!mesaActual || !mesaActual.pedido) return;
-
-    const itemsActualizados = mesaActual.pedido.items
-      .map((it) => (it.productId === productId ? { ...it, cantidad: it.cantidad + delta } : it))
-      .filter((it) => it.cantidad > 0);
-
+    const itemsActualizados = mesaActual.pedido.items.map((it) => (it.productId === productId ? { ...it, cantidad: it.cantidad + delta } : it)).filter((it) => it.cantidad > 0);
     const nuevoPedido = { ...mesaActual.pedido, items: itemsActualizados };
-
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
   }
@@ -782,100 +952,88 @@ export default function BodegonCocoApp() {
   function quitarItem(productId) {
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
     if (!mesaActual || !mesaActual.pedido) return;
-
     const itemsActualizados = mesaActual.pedido.items.filter((it) => it.productId !== productId);
     const nuevoPedido = { ...mesaActual.pedido, items: itemsActualizados };
-
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
   }
 
-  function cobrarYCerrar() {
+  async function cobrarYCerrar(metodoPago, totalOrig, descuentoApli, totalFin) {
+    const mesaActual = mesas.find((m) => m.id === mesaActivaId);
+    if (!mesaActual || !mesaActual.pedido) return;
+
+    const nuevaVenta = {
+      total_original: totalOrig,
+      metodo_pago: metodoPago,
+      descuento: descuentoApli,
+      total_final: totalFin,
+      items: mesaActual.pedido.items
+    };
+
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, estado: 'Libre', pedido: null } : m));
     guardarMesaDB(mesaActivaId, 'Libre', null);
     
     setModal(null);
     volverAGrid();
+
+    const { error } = await supabase.from('ventas').insert([nuevaVenta]);
+    if (error) console.error("Error registrando la venta:", error);
   }
 
-  function imprimirTicket() {
-    window.print();
+  async function confirmarEliminacionVenta() {
+    if (!ventaAEliminar) return;
+    const idBorrar = ventaAEliminar.id;
+    
+    setVentas(prev => prev.filter(v => v.id !== idBorrar));
+    setModal(null);
+    setVentaAEliminar(null);
+
+    const { error } = await supabase.from('ventas').delete().eq('id', idBorrar);
+    if (error) console.error("Error al eliminar venta:", error);
   }
+
+  function imprimirTicket() { window.print(); }
 
   function intentarLoginAdmin() {
-    if (pinInput === ADMIN_PIN) {
-      setRol('admin');
-      setModal(null);
-      setPinInput('');
-      setPinError(false);
-    } else {
-      setPinError(true);
-      setPinInput('');
-    }
+    if (pinInput === ADMIN_PIN) { setRol('admin'); setModal(null); setPinInput(''); setPinError(false); }
+    else { setPinError(true); setPinInput(''); }
   }
+  function salirDeAdmin() { setRol('mozo'); if (vista === 'admin') setVista('grid'); }
 
-  function salirDeAdmin() {
-    setRol('mozo');
-    if (vista === 'admin') setVista('grid');
-  }
-
-  // 🚀 CREAR / EDITAR PRODUCTO EN SUPABASE
   async function guardarProducto(datos) {
     if (productoEditando) {
-      // Actualizar localmente
       setProductos((prev) => prev.map((p) => (p.id === productoEditando.id ? { ...p, ...datos } : p)));
-      // Guardar en Supabase
       const { error } = await supabase.from('productos').update(datos).eq('id', productoEditando.id);
       if (error) console.error("Error al actualizar producto:", error);
     } else {
-      // Guardar nuevo en Supabase
       const { data, error } = await supabase.from('productos').insert([datos]).select();
-      if (data && data.length > 0) {
-        setProductos((prev) => [...prev, data[0]]);
-      }
+      if (data && data.length > 0) setProductos((prev) => [...prev, data[0]]);
       if (error) console.error("Error al agregar producto:", error);
     }
-    setModal(null);
-    setProductoEditando(null);
+    setModal(null); setProductoEditando(null);
   }
 
-  // 🚀 ELIMINAR PRODUCTO EN SUPABASE
   async function eliminarProducto(id) {
     setProductos((prev) => prev.filter((p) => p.id !== id));
     const { error } = await supabase.from('productos').delete().eq('id', id);
     if (error) console.error("Error al eliminar producto:", error);
   }
 
-  // 🚀 AGREGAR MESA EN SUPABASE
   async function agregarMesa() {
     const nuevoNumero = mesas.length > 0 ? Math.max(...mesas.map((m) => m.numero)) + 1 : 1;
     const nuevoId = mesas.length > 0 ? Math.max(...mesas.map((m) => m.id)) + 1 : 1;
-    
     const nuevaMesa = { id: nuevoId, numero: nuevoNumero, capacidad: 4, estado: 'Libre', pedido: null };
-    
     setMesas((prev) => [...prev, nuevaMesa]);
     const { error } = await supabase.from('mesas').insert([nuevaMesa]);
-    if (error) {
-      console.error("Error agregando mesa a Supabase:", error);
-      setErrorSync(true);
-    }
+    if (error) { console.error("Error agregando mesa:", error); setErrorSync(true); }
   }
 
-  // 🚀 ELIMINAR MESA EN SUPABASE
   async function eliminarMesa(id) {
     const m = mesas.find((x) => x.id === id);
-    if (m && m.estado === 'Ocupada') {
-      setAvisoMesas('No se puede eliminar una mesa ocupada. Cerrá la cuenta primero.');
-      setTimeout(() => setAvisoMesas(''), 3000);
-      return;
-    }
-    
+    if (m && m.estado === 'Ocupada') { setAvisoMesas('No se puede eliminar una mesa ocupada. Cerrá la cuenta primero.'); setTimeout(() => setAvisoMesas(''), 3000); return; }
     setMesas((prev) => prev.filter((x) => x.id !== id));
     const { error } = await supabase.from('mesas').delete().eq('id', id);
-    if (error) {
-      console.error("Error eliminando mesa de Supabase:", error);
-      setErrorSync(true);
-    }
+    if (error) { console.error("Error eliminando mesa:", error); setErrorSync(true); }
   }
 
   return (
@@ -887,75 +1045,36 @@ export default function BodegonCocoApp() {
           <LoadingScreen />
         ) : (
           <>
-            <Header
-              vista={vista}
-              mesa={mesaActiva}
-              rol={rol}
-              onBack={volverAGrid}
-              onAbrirLoginAdmin={() => { setPinError(false); setPinInput(''); setModal('pin'); }}
-              onIrAdmin={() => setVista('admin')}
-            />
-
+            <Header vista={vista} mesa={mesaActiva} rol={rol} onBack={volverAGrid} onAbrirLoginAdmin={() => { setPinError(false); setPinInput(''); setModal('pin'); }} onIrAdmin={() => setVista('admin')} />
             {errorSync && <div className="banner-error">No se pudo guardar el último cambio. Revisá tu conexión.</div>}
-
+            
             {vista === 'grid' && <GridMesas mesas={mesas} onAbrirMesa={abrirMesa} justChanged={justChanged} />}
-
+            
             {vista === 'mesa' && mesaActiva && (
               <DetalleMesa
-                mesa={mesaActiva}
-                productos={productos}
-                categorias={categorias}
-                categoriaFiltro={categoriaFiltro}
-                onFiltrar={setCategoriaFiltro}
-                onAgregarItem={agregarItem}
-                onCambiarCantidad={cambiarCantidad}
-                onQuitarItem={quitarItem}
-                onAbrirRecibo={() => setModal('recibo')}
-                onAbrirCobrar={() => setModal('cobrar')}
+                mesa={mesaActiva} productos={productos} categorias={categorias} categoriaFiltro={categoriaFiltro}
+                onFiltrar={setCategoriaFiltro} onAgregarItem={agregarItem} onCambiarCantidad={cambiarCantidad}
+                onQuitarItem={quitarItem} onAbrirRecibo={() => setModal('recibo')} onAbrirCobrar={() => setModal('cobrar')}
               />
             )}
-            {vista === 'mesa' && !mesaActiva && (
-              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                Esta mesa ya no existe.
-                <div style={{ marginTop: 14 }}>
-                  <button className="btn btn-outline" onClick={volverAGrid}>Volver a mesas</button>
-                </div>
-              </div>
-            )}
-
+            
             {vista === 'admin' && rol === 'admin' && (
               <PanelAdmin
-                productos={productos}
-                mesas={mesas}
-                onSalir={salirDeAdmin}
-                onNuevoProducto={() => { setProductoEditando(null); setModal('producto'); }}
-                onEditarProducto={(p) => { setProductoEditando(p); setModal('producto'); }}
-                onEliminarProducto={eliminarProducto}
-                onAgregarMesa={agregarMesa}
-                onEliminarMesa={eliminarMesa}
-                avisoMesas={avisoMesas}
+                productos={productos} mesas={mesas} ventas={ventas} onSalir={salirDeAdmin} onNuevoProducto={() => { setProductoEditando(null); setModal('producto'); }}
+                onEditarProducto={(p) => { setProductoEditando(p); setModal('producto'); }} onEliminarProducto={eliminarProducto}
+                onAgregarMesa={agregarMesa} onEliminarMesa={eliminarMesa} avisoMesas={avisoMesas}
+                onAbrirEliminarVenta={(v) => { setVentaAEliminar(v); setModal('eliminar_venta'); }} 
               />
             )}
           </>
         )}
 
-        {modal === 'pin' && (
-          <PinModal pinInput={pinInput} setPinInput={setPinInput} pinError={pinError} onConfirmar={intentarLoginAdmin} onClose={() => setModal(null)} />
-        )}
-        {modal === 'recibo' && mesaActiva && (
-          <ReciboModal mesa={mesaActiva} onClose={() => setModal(null)} onImprimir={imprimirTicket} />
-        )}
-        {modal === 'cobrar' && mesaActiva && (
-          <ConfirmarCobroModal mesa={mesaActiva} onCancelar={() => setModal(null)} onConfirmar={cobrarYCerrar} />
-        )}
-        {modal === 'producto' && (
-          <ProductoFormModal
-            producto={productoEditando}
-            categoriasExistentes={categorias.filter((c) => c !== 'Todas')}
-            onGuardar={guardarProducto}
-            onClose={() => { setModal(null); setProductoEditando(null); }}
-          />
-        )}
+        {modal === 'pin' && <PinModal pinInput={pinInput} setPinInput={setPinInput} pinError={pinError} onConfirmar={intentarLoginAdmin} onClose={() => setModal(null)} />}
+        {modal === 'recibo' && mesaActiva && <ReciboModal mesa={mesaActiva} onClose={() => setModal(null)} onImprimir={imprimirTicket} />}
+        {modal === 'cobrar' && mesaActiva && <ConfirmarCobroModal mesa={mesaActiva} onCancelar={() => setModal(null)} onConfirmar={cobrarYCerrar} />}
+        {modal === 'producto' && <ProductoFormModal producto={productoEditando} categoriasExistentes={categorias.filter((c) => c !== 'Todas')} onGuardar={guardarProducto} onClose={() => { setModal(null); setProductoEditando(null); }} />}
+        
+        {modal === 'eliminar_venta' && <ConfirmarEliminarVentaModal venta={ventaAEliminar} onCancelar={() => { setModal(null); setVentaAEliminar(null); }} onConfirmar={confirmarEliminacionVenta} />}
       </div>
     </div>
   );
