@@ -4,7 +4,7 @@ import {
   ArrowLeft, Lock, Plus, Minus, Trash2, Printer, X, Users, Check,
   Loader2, Pencil, ChefHat, Wine, UtensilsCrossed, ShieldCheck,
   HandCoins, CreditCard, QrCode, CalendarDays, TrendingUp, ClipboardList,
-  Download
+  Download, Clock
 } from 'lucide-react';
 
 const ADMIN_PIN = '1234';
@@ -21,6 +21,8 @@ const STYLES = `
   --libre-bg: #E3F0E6;
   --ocupada: #B33A3A;
   --ocupada-bg: #F6E4E2;
+  --reservada: #D35400;
+  --reservada-bg: #FDEBD0;
   --text: #241F18;
   --text-muted: #7C7261;
   --border: #DEDBC9;
@@ -33,17 +35,19 @@ const STYLES = `
   color: var(--text);
   min-height: 100vh;
   width: 100%;
-  max-width: 480px;
+  max-width: 100%; /* 🚀 AHORA ES FULL SCREEN EN PC Y MANTIENE SU FORMA EN CELULAR */
+  margin: 0 auto;
   position: relative;
   overflow-x: hidden;
 }
+
 .bc-display { font-family: 'Oswald', sans-serif; }
 .bc-script { font-family: 'Caveat', cursive; }
 
 .bc-header {
   position: sticky; top: 0; z-index: 20;
   background: var(--ink); color: var(--surface);
-  padding: 14px 16px; display: flex; align-items: center; gap: 8px;
+  padding: 14px 20px; display: flex; align-items: center; gap: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.18);
 }
 .banner-error { background: var(--ocupada-bg); color: var(--ocupada); font-size: 12.5px; text-align: center; padding: 8px 12px; }
@@ -63,7 +67,7 @@ const STYLES = `
 
 .section-label {
   font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--text-muted); margin: 16px 2px 6px;
+  color: var(--text-muted); margin: 20px 2px 10px;
 }
 
 .table-card {
@@ -76,6 +80,8 @@ const STYLES = `
 .table-card:active { transform: scale(0.97); }
 .table-card.libre { border-top-color: var(--libre); }
 .table-card.ocupada { border-top-color: var(--ocupada); }
+.table-card.reservada { border-top-color: var(--reservada); } 
+
 @keyframes statusPop { 0% { transform: scale(1); } 40% { transform: scale(1.045); } 100% { transform: scale(1); } }
 .status-changed { animation: statusPop .45s ease; }
 
@@ -85,6 +91,7 @@ const STYLES = `
 }
 .status-pill.libre { background: var(--libre-bg); color: var(--libre); }
 .status-pill.ocupada { background: var(--ocupada-bg); color: var(--ocupada); }
+.status-pill.reservada { background: var(--reservada-bg); color: var(--reservada); } 
 
 .chips-row { display: flex; gap: 8px; overflow-x: auto; padding: 14px 16px 4px; scrollbar-width: none; }
 .chips-row::-webkit-scrollbar { display: none; }
@@ -95,21 +102,27 @@ const STYLES = `
 }
 .chip.active { background: var(--ink); border-color: var(--ink); color: var(--surface); }
 
-.menu-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 2px; border-bottom: 1px solid var(--border); gap: 10px; }
+.menu-row { display: flex; align-items: center; justify-content: flex-start; padding: 12px 4px; border-bottom: 1px solid var(--border); gap: 14px; text-align: left; }
 .menu-row:last-child { border-bottom: none; }
-.menu-icon { width: 32px; height: 32px; border-radius: 9px; background: var(--bg); color: var(--ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.btn-add-round { width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--surface); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.menu-row > div:nth-child(2) { flex: 1; text-align: left; } 
+
+.menu-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); color: var(--ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-add-round { width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--surface); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; margin-left: auto; }
 .btn-add-round:active { transform: scale(0.9); }
 
-.pedido-row { display: flex; align-items: center; gap: 8px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+.pedido-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); text-align: left; }
 .pedido-row:last-child { border-bottom: none; }
-.stepper { display: flex; align-items: center; gap: 6px; background: var(--bg); border-radius: 10px; padding: 3px 5px; flex-shrink: 0; }
-.stepper button { width: 24px; height: 24px; border: none; background: var(--surface); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; }
-.stepper span { min-width: 16px; text-align: center; font-weight: 700; font-size: 13px; }
+.pedido-row > div:first-child { flex: 1; text-align: left; } 
+
+.stepper { display: flex; align-items: center; gap: 8px; background: var(--bg); border-radius: 10px; padding: 4px 6px; flex-shrink: 0; }
+.stepper button { width: 26px; height: 26px; border: none; background: var(--surface); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; }
+.stepper span { min-width: 18px; text-align: center; font-weight: 700; font-size: 14px; }
 
 .bottom-bar {
-  position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto;
-  background: var(--ink); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+  position: fixed; bottom: 0; left: 0; right: 0; 
+  max-width: 100%; /* 🚀 BARRA DE ABAJO EN FULL SCREEN */
+  margin: 0 auto;
+  background: var(--ink); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
   z-index: 30; box-shadow: 0 -2px 12px rgba(0,0,0,0.18);
 }
 
@@ -122,48 +135,53 @@ const STYLES = `
 .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .btn-primary { background: var(--accent); color: #241505; }
 .btn-success { background: var(--libre); color: #fff; }
+.btn-warning { background: var(--reservada); color: #fff; }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
 .btn-outline-dark { background: transparent; border: 1.5px solid rgba(255,255,255,0.35); color: var(--surface); padding: 12px 14px; }
 
 /* Estilos Admin y Ventas */
-.admin-tabs { display: flex; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 12px; margin-bottom: 20px; }
-.admin-tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .03em; font-size: 13px; cursor: pointer; color: var(--text-muted); }
+.admin-tabs { display: flex; background: rgba(0,0,0,0.05); padding: 6px; border-radius: 12px; margin-bottom: 20px; }
+.admin-tab { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .03em; font-size: 14px; cursor: pointer; color: var(--text-muted); }
 .admin-tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-.admin-row { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
+.admin-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); text-align: left; }
 .admin-row:last-child { border-bottom: none; }
-.icon-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+.admin-row > div:first-child { flex: 1; text-align: left; }
+
+.icon-btn { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
 .icon-btn-danger { color: var(--ocupada); border-color: var(--ocupada-bg); }
-.mesa-chip-admin { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 7px 6px 7px 13px; font-size: 12.5px; }
-.mesa-chip-admin button { width: 20px; height: 20px; border-radius: 50%; border: none; background: var(--ocupada-bg); color: var(--ocupada); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-.aviso { background: var(--ocupada-bg); color: var(--ocupada); padding: 9px 12px; border-radius: 999px; font-size: 12.5px; margin-bottom: 12px; }
+.mesa-chip-admin { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 8px 8px 8px 14px; font-size: 13.5px; }
+.mesa-chip-admin button { width: 22px; height: 22px; border-radius: 50%; border: none; background: var(--ocupada-bg); color: var(--ocupada); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.aviso { background: var(--ocupada-bg); color: var(--ocupada); padding: 10px 14px; border-radius: 999px; font-size: 13px; margin-bottom: 14px; }
 
 /* Estilos de Pagos */
-.payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+.payment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 16px 0; }
 .payment-btn { border: 1.5px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
 .payment-btn span { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.03em; }
 .payment-btn.active { border-color: var(--accent); background: #FAF5EA; color: var(--ink); box-shadow: 0 4px 12px rgba(198,146,46,0.15); transform: translateY(-2px); }
 
-/* Estilos de Resumen Historial */
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-.stat-card { background: var(--ink); color: var(--surface); padding: 16px; border-radius: 16px; position: relative; overflow: hidden; }
-.stat-label { font-family: 'Oswald', sans-serif; font-size: 12px; opacity: 0.7; letter-spacing: 0.05em; margin-bottom: 6px; }
-.stat-val { font-size: 26px; font-weight: 700; line-height: 1; }
-.venta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--ink); color: var(--surface); padding: 20px; border-radius: 16px; position: relative; overflow: hidden; }
+.stat-label { font-family: 'Oswald', sans-serif; font-size: 13px; opacity: 0.7; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stat-val { font-size: 32px; font-weight: 700; line-height: 1; }
+.venta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
 
-.form-field { margin-bottom: 12px; }
-.form-field label { display: block; font-family: 'Oswald', sans-serif; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
-.form-field input, .form-field select { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--border); font-size: 14.5px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text); }
+.form-field { margin-bottom: 14px; }
+.form-field label { display: block; font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.form-field input, .form-field select { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--border); font-size: 15px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text); }
 .form-field input:focus, .form-field select:focus { outline: none; border-color: var(--accent); }
 
-.pin-input { width: 100%; font-size: 30px; letter-spacing: 16px; text-align: center; padding: 14px 10px 14px 20px; border-radius: 12px; border: 1.5px solid var(--border); font-family: 'Oswald', sans-serif; color: var(--text); background: var(--surface); }
+.pin-input { width: 100%; font-size: 32px; letter-spacing: 16px; text-align: center; padding: 16px 10px 16px 20px; border-radius: 12px; border: 1.5px solid var(--border); font-family: 'Oswald', sans-serif; color: var(--text); background: var(--surface); }
 .pin-input:focus { outline: none; border-color: var(--accent); }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(31,46,61,0.55); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
-.modal-sheet { background: var(--surface); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; }
+.modal-sheet { background: var(--surface); width: 100%; max-width: 600px; border-radius: 24px 24px 0 0; padding: 24px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; margin: 0 auto; }
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 .ticket { font-family: 'Inter', monospace; background: #fff; color: #171310; padding: 16px; border-radius: 8px; border: 1px dashed #B8AF9C; }
+
+/* 🚀 CLASE OCULTA PARA IMPRIMIR DESDE EL FONDO SIN ENSUCIAR LA WEB */
+.print-only { position: absolute; left: -9999px; visibility: hidden; }
 
 .bc-app button, .bc-app input, .bc-app select { font-family: inherit; }
 .bc-app button:focus-visible, .bc-app input:focus-visible, .bc-app select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -182,18 +200,21 @@ const STYLES = `
     overflow: visible !important; transform: none !important; background: transparent !important;
   }
   
-  #recibo-print, #recibo-print * { 
+  /* 🚀 EL TICKET IMPRESO VUELVE AL ESTILO CLÁSICO DE MÁQUINA DE ESCRIBIR */
+  .ticket-print-area, .ticket-print-area * { 
     visibility: visible; 
     font-family: Arial, Helvetica, sans-serif !important; 
     color: black !important;
     -webkit-font-smoothing: none !important; 
     text-rendering: crispEdges !important; 
   }
-  #recibo-print { 
-    position: absolute; top: 0; left: 0; width: 74mm; padding: 5mm; margin: 0; border: none; 
+  .ticket-print-area { 
+    position: absolute !important; top: 0 !important; left: 0 !important; 
+    width: 74mm !important; padding: 5mm !important; margin: 0 !important; border: none !important; 
   }
   .bc-display { font-size: 22px !important; font-weight: 800 !important; }
 
+  /* 🚀 ITEMS CON MONOSPACE PARA QUE QUEDEN ALINEADOS */
   .ticket-row {
     display: flex !important; justify-content: space-between !important;
     font-family: 'Courier New', Courier, monospace !important; font-weight: 600 !important;
@@ -201,7 +222,7 @@ const STYLES = `
   }
   .ticket-row span { font-family: inherit !important; }
   
-  .ticket-row:last-of-type, .ticket-row:last-of-type span {
+  .ticket-row.total-row, .ticket-row.total-row span {
     font-family: Arial, Helvetica, sans-serif !important; font-weight: 900 !important;
     font-size: 18px !important; padding-top: 6px !important;
   }
@@ -228,11 +249,11 @@ function formatearMes(yyyy_mm) {
 function tiempoAbierta(abiertoEn) {
   if (!abiertoEn) return '';
   const mins = Math.max(0, Math.floor((Date.now() - abiertoEn) / 60000));
-  if (mins < 1) return 'recién abierta';
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return 'recién';
+  if (mins < 60) return `${mins} min`;
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  return `hace ${h}h ${m}min`;
+  return `${h}h ${m}m`;
 }
 
 function agruparPorCategoria(productos) {
@@ -279,7 +300,7 @@ function Header({ vista, mesa, rol, onBack, onAbrirLoginAdmin, onIrAdmin }) {
           <>
             <div className="bc-display" style={{ fontSize: 19, fontWeight: 600 }}>Mesa {mesa.numero}</div>
             <div style={{ fontSize: 12, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Users size={12} /> {mesa.capacidad} · {mesa.estado === 'Ocupada' ? tiempoAbierta(mesa.pedido && mesa.pedido.abiertoEn) : 'Libre'}
+              <Users size={12} /> {mesa.capacidad} · {mesa.estado === 'Ocupada' || mesa.estado === 'Reservada' ? tiempoAbierta(mesa.pedido && mesa.pedido.abiertoEn) : 'Libre'}
             </div>
           </>
         )}
@@ -305,25 +326,36 @@ function Header({ vista, mesa, rol, onBack, onAbrirLoginAdmin, onIrAdmin }) {
 }
 
 function TableCard({ mesa, onClick, justChanged }) {
-  const ocupada = mesa.estado === 'Ocupada';
+  const esOcupada = mesa.estado === 'Ocupada';
+  const esReservada = mesa.estado === 'Reservada';
   const total = mesa.pedido ? mesa.pedido.items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0) : 0;
+  
+  const claseEstado = esOcupada ? 'ocupada' : esReservada ? 'reservada' : 'libre';
+  const textoEstado = esOcupada ? 'OCUPADA' : esReservada ? 'RESERVADA' : 'LIBRE';
+
   return (
     <div
-      className={`table-card ${ocupada ? 'ocupada' : 'libre'} ${justChanged ? 'status-changed' : ''}`}
+      className={`table-card ${claseEstado} ${justChanged ? 'status-changed' : ''}`}
       onClick={onClick}
       role="button"
       tabIndex={0}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div className="bc-display" style={{ fontSize: 30, fontWeight: 600, lineHeight: 1 }}>{mesa.numero}</div>
-        <span className={`status-pill ${ocupada ? 'ocupada' : 'libre'}`}>{ocupada ? 'OCUPADA' : 'LIBRE'}</span>
+        <span className={`status-pill ${claseEstado}`}>{textoEstado}</span>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
         <Users size={12} /> {mesa.capacidad}
       </div>
-      {ocupada && (
+      {esOcupada && (
         <div style={{ marginTop: 2 }}>
           <div className="bc-display" style={{ fontSize: 17, fontWeight: 600, color: 'var(--ocupada)' }}>{formatMoney(total)}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tiempoAbierta(mesa.pedido && mesa.pedido.abiertoEn)}</div>
+        </div>
+      )}
+      {esReservada && (
+        <div style={{ marginTop: 2 }}>
+          <div className="bc-display" style={{ fontSize: 17, fontWeight: 600, color: 'var(--reservada)' }}><Clock size={15} style={{display:'inline', marginBottom:-2}} /> Esperando</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tiempoAbierta(mesa.pedido && mesa.pedido.abiertoEn)}</div>
         </div>
       )}
@@ -333,10 +365,13 @@ function TableCard({ mesa, onClick, justChanged }) {
 
 function GridMesas({ mesas, onAbrirMesa, justChanged }) {
   const libres = mesas.filter((m) => m.estado === 'Libre').length;
+  const reservadas = mesas.filter((m) => m.estado === 'Reservada').length;
+  const ocupadas = mesas.filter((m) => m.estado === 'Ocupada').length;
+
   return (
     <div style={{ padding: 16 }}>
       <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 14 }}>
-        {libres} libres · {mesas.length - libres} ocupadas
+        {libres} libres · {ocupadas} ocupadas · {reservadas} reservadas
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 12 }}>
         {mesas.map((m) => (
@@ -352,13 +387,36 @@ function GridMesas({ mesas, onAbrirMesa, justChanged }) {
   );
 }
 
-function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirRecibo, onAbrirCobrar }) {
+function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirCobrar, onCambiarEstadoDirecto }) {
   const items = mesa.pedido ? mesa.pedido.items : [];
   const total = items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0);
   const productosFiltrados = categoriaFiltro === 'Todas' ? productos : productos.filter((p) => p.categoria === categoriaFiltro);
 
+  const esLibre = mesa.estado === 'Libre';
+  const esReservada = mesa.estado === 'Reservada';
+
   return (
     <div style={{ paddingBottom: 100 }}>
+      
+      {esLibre && items.length === 0 && (
+        <div style={{ padding: '16px 16px 0' }}>
+          <button className="btn btn-warning" style={{ width: '100%' }} onClick={() => onCambiarEstadoDirecto(mesa.id, 'Reservada')}>
+            <Clock size={16} /> Reservar Mesa
+          </button>
+        </div>
+      )}
+      
+      {esReservada && (
+        <div style={{ padding: '16px 16px 0', display: 'flex', gap: 10 }}>
+          <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => onCambiarEstadoDirecto(mesa.id, 'Libre')}>
+            ❌ Cancelar Reserva
+          </button>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => onCambiarEstadoDirecto(mesa.id, 'Ocupada')}>
+            ✅ Llego el cliente 
+          </button>
+        </div>
+      )}
+
       <div className="chips-row">
         {categorias.map((c) => (
           <button key={c} className={`chip ${categoriaFiltro === c ? 'active' : ''}`} onClick={() => onFiltrar(c)}>
@@ -424,9 +482,7 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
           <div className="bc-display" style={{ fontSize: 22, fontWeight: 700, color: 'var(--surface)' }}>{formatMoney(total)}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-outline-dark" onClick={onAbrirRecibo} disabled={items.length === 0} aria-label="Imprimir ticket">
-            <Printer size={16} />
-          </button>
+          {/* 🚀 BOTÓN DE PRE-TICKET ELIMINADO COMO PEDISTE */}
           <button className="btn btn-primary" onClick={onAbrirCobrar} disabled={items.length === 0}>
             <Check size={16} /> Cobrar
           </button>
@@ -473,42 +529,12 @@ function PinModal({ pinInput, setPinInput, pinError, onConfirmar, onClose }) {
   );
 }
 
-function ReciboModal({ mesa, onClose, onImprimir }) {
-  const items = mesa.pedido ? mesa.pedido.items : [];
-  const total = items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0);
-  const fecha = new Date().toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-  return (
-    <ModalWrapper titulo="Ticket" onClose={onClose}>
-      <div id="recibo-print" className="ticket">
-        <div style={{ textAlign: 'center', marginBottom: 6 }}>
-          <div className="bc-display" style={{ fontSize: 16, fontWeight: 700 }}>BODEGÓN COCO</div>
-          <div style={{ fontSize: 11 }}>Mesa {mesa.numero} · {fecha}</div>
-        </div>
-        <div className="ticket-divider" />
-        {items.map((it) => (
-          <div key={it.productId} className="ticket-row">
-            <span>{it.cantidad} x {it.nombre}</span>
-            <span>{formatMoney(it.precioUnit * it.cantidad)}</span>
-          </div>
-        ))}
-        <div className="ticket-divider" />
-        <div className="ticket-row" style={{ fontWeight: 700, fontSize: 15 }}>
-          <span>TOTAL</span>
-          <span>{formatMoney(total)}</span>
-        </div>
-        <div style={{ textAlign: 'center', fontSize: 11, marginTop: 10, color: '#555' }}>¡Gracias por su visita!</div>
-      </div>
-      <button className="btn btn-primary" style={{ width: '100%', marginTop: 16 }} onClick={onImprimir}>
-        <Printer size={16} /> Imprimir
-      </button>
-    </ModalWrapper>
-  );
-}
-
+// 🚀 MODAL DE COBRO (AHORA GENERA EL TICKET FINAL INTELIGENTE)
 function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
   const [metodo, setMetodo] = useState('Efectivo');
   
-  const totalOrig = mesa.pedido ? mesa.pedido.items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0) : 0;
+  const items = mesa.pedido ? mesa.pedido.items : [];
+  const totalOrig = items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0);
   
   let descuento = 0;
   let recargo = 0;
@@ -519,9 +545,11 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
 
   const totalFinal = totalOrig - descuento + recargo;
   const ajusteBD = descuento - recargo;
+  
+  const fecha = new Date().toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
 
   return (
-    <ModalWrapper titulo="Método de pago" onClose={onCancelar}>
+    <ModalWrapper titulo="Método de pago y Ticket" onClose={onCancelar}>
       <div className="payment-grid">
         <button className={`payment-btn ${metodo === 'Efectivo' ? 'active' : ''}`} onClick={() => setMetodo('Efectivo')}>
           <HandCoins size={28} />
@@ -577,10 +605,40 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
          </div>
       </div>
 
+      {/* 🚀 EL TICKET FINAL INVISIBLE QUE VA A LA TICKETERA */}
+      <div className="print-only ticket-print-area">
+        <div style={{ textAlign: 'center', marginBottom: 6 }}>
+          <div className="bc-display" style={{ fontSize: 16, fontWeight: 700 }}>BODEGÓN COCO</div>
+          <div style={{ fontSize: 11, fontFamily: 'Arial, sans-serif' }}>Mesa {mesa.numero} · {fecha}</div>
+        </div>
+        <div className="ticket-divider" />
+        {items.map((it) => (
+          <div key={it.productId} className="ticket-row">
+            <span>{it.cantidad} x {it.nombre}</span>
+            <span>{formatMoney(it.precioUnit * it.cantidad)}</span>
+          </div>
+        ))}
+        <div className="ticket-divider" />
+        <div className="ticket-row"><span>Subtotal:</span><span>{formatMoney(totalOrig)}</span></div>
+        
+        {descuento > 0 && <div className="ticket-row"><span>Desc (Efectivo):</span><span>-{formatMoney(descuento)}</span></div>}
+        {recargo > 0 && <div className="ticket-row"><span>Recargo ({metodo}):</span><span>+{formatMoney(recargo)}</span></div>}
+        
+        <div className="ticket-divider" />
+        <div className="ticket-row total-row">
+          <span>TOTAL</span>
+          <span>{formatMoney(totalFinal)}</span>
+        </div>
+        <div style={{ textAlign: 'center', fontSize: 11, marginTop: 10, color: '#555', fontFamily: 'Arial, sans-serif' }}>¡Gracias por su visita!</div>
+      </div>
+
       <div style={{ display: 'flex', gap: 10 }}>
-        <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancelar}>Cancelar</button>
-        <button className="btn btn-success" style={{ flex: 1 }} onClick={() => onConfirmar(metodo, totalOrig, ajusteBD, totalFinal)}>
-          <Check size={16} /> Confirmar Venta
+        <button className="btn btn-outline" style={{ flex: 1, padding: '12px 10px' }} onClick={onCancelar}>Cancelar</button>
+        <button className="btn btn-outline" style={{ flex: 1, padding: '12px 10px', color: 'var(--ink)', borderColor: 'var(--ink)' }} onClick={() => window.print()}>
+          <Printer size={16} /> Ticket Final
+        </button>
+        <button className="btn btn-success" style={{ flex: 1.5, padding: '12px 10px' }} onClick={() => onConfirmar(metodo, totalOrig, ajusteBD, totalFinal)}>
+          <Check size={16} /> Cobrar y Cerrar
         </button>
       </div>
     </ModalWrapper>
@@ -648,37 +706,30 @@ function ProductoFormModal({ producto, categoriasExistentes, onGuardar, onClose 
   );
 }
 
-// 🚀 PANEL ADMIN: CON SELECTOR DE MESES
 function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEditarProducto, onEliminarProducto, onAgregarMesa, onEliminarMesa, avisoMesas, onAbrirEliminarVenta }) {
   const [tab, setTab] = useState('menu'); 
   const grupos = agruparPorCategoria(productos);
 
-  // 1. Estado para el filtro de mes (Por defecto, el mes actual: "2024-08")
   const [mesFiltro, setMesFiltro] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  // 2. Extraer los meses únicos que existen en el historial de ventas
   const mesesDisponibles = useMemo(() => {
     const setMeses = new Set(ventas.map(v => {
       const d = new Date(v.creado_en);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     }));
-    // Aseguramos que el mes actual siempre esté en la lista aunque no haya ventas
     const d = new Date();
     setMeses.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-    // Los ordenamos del más nuevo al más viejo
     return Array.from(setMeses).sort().reverse();
   }, [ventas]);
 
-  // 3. Filtrar las ventas para que solo muestre las del mes seleccionado
   const ventasMes = ventas.filter(v => {
     const d = new Date(v.creado_en);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesFiltro;
   });
 
-  // 4. La caja de "HOY" siempre busca el día calendario exacto
   const ahora = new Date();
   const ventasHoy = ventas.filter(v => new Date(v.creado_en).toDateString() === ahora.toDateString());
 
@@ -770,8 +821,6 @@ function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEdit
 
       {tab === 'historial' && (
         <div style={{ animation: 'slideUp .25s ease' }}>
-          
-          {/* 🚀 SELECTOR DE MESES */}
           <div className="form-field" style={{ marginBottom: 16 }}>
             <label>Filtrar historial por mes</label>
             <select value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)}>
@@ -923,7 +972,7 @@ export default function BodegonCocoApp() {
   function agregarItem(producto) {
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
     if (!mesaActual) return;
-    const eraLibre = mesaActual.estado === 'Libre';
+    const eraLibreO_Reservada = mesaActual.estado === 'Libre' || mesaActual.estado === 'Reservada';
     
     let nuevoPedido;
     if (mesaActual.pedido) {
@@ -937,7 +986,7 @@ export default function BodegonCocoApp() {
 
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, estado: 'Ocupada', pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
-    if (eraLibre) { setJustChanged(mesaActivaId); setTimeout(() => setJustChanged(null), 450); }
+    if (eraLibreO_Reservada) { setJustChanged(mesaActivaId); setTimeout(() => setJustChanged(null), 450); }
   }
 
   function cambiarCantidad(productId, delta) {
@@ -956,6 +1005,22 @@ export default function BodegonCocoApp() {
     const nuevoPedido = { ...mesaActual.pedido, items: itemsActualizados };
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
+  }
+
+  function cambiarEstadoDirectoMesa(mesaId, nuevoEstado) {
+    const mesaActual = mesas.find((m) => m.id === mesaId);
+    if (!mesaActual) return;
+
+    let nuevoPedido = mesaActual.pedido;
+    if (nuevoEstado === 'Reservada' && !mesaActual.pedido) {
+      nuevoPedido = { abiertoEn: Date.now(), items: [] }; 
+    } else if (nuevoEstado === 'Libre') {
+      nuevoPedido = null; 
+    }
+
+    setMesas((prev) => prev.map((m) => m.id === mesaId ? { ...m, estado: nuevoEstado, pedido: nuevoPedido } : m));
+    guardarMesaDB(mesaId, nuevoEstado, nuevoPedido);
+    volverAGrid();
   }
 
   async function cobrarYCerrar(metodoPago, totalOrig, descuentoApli, totalFin) {
@@ -991,8 +1056,6 @@ export default function BodegonCocoApp() {
     const { error } = await supabase.from('ventas').delete().eq('id', idBorrar);
     if (error) console.error("Error al eliminar venta:", error);
   }
-
-  function imprimirTicket() { window.print(); }
 
   function intentarLoginAdmin() {
     if (pinInput === ADMIN_PIN) { setRol('admin'); setModal(null); setPinInput(''); setPinError(false); }
@@ -1030,7 +1093,7 @@ export default function BodegonCocoApp() {
 
   async function eliminarMesa(id) {
     const m = mesas.find((x) => x.id === id);
-    if (m && m.estado === 'Ocupada') { setAvisoMesas('No se puede eliminar una mesa ocupada. Cerrá la cuenta primero.'); setTimeout(() => setAvisoMesas(''), 3000); return; }
+    if (m && (m.estado === 'Ocupada' || m.estado === 'Reservada')) { setAvisoMesas('No se puede eliminar una mesa ocupada/reservada. Liberá la mesa primero.'); setTimeout(() => setAvisoMesas(''), 3000); return; }
     setMesas((prev) => prev.filter((x) => x.id !== id));
     const { error } = await supabase.from('mesas').delete().eq('id', id);
     if (error) { console.error("Error eliminando mesa:", error); setErrorSync(true); }
@@ -1054,7 +1117,8 @@ export default function BodegonCocoApp() {
               <DetalleMesa
                 mesa={mesaActiva} productos={productos} categorias={categorias} categoriaFiltro={categoriaFiltro}
                 onFiltrar={setCategoriaFiltro} onAgregarItem={agregarItem} onCambiarCantidad={cambiarCantidad}
-                onQuitarItem={quitarItem} onAbrirRecibo={() => setModal('recibo')} onAbrirCobrar={() => setModal('cobrar')}
+                onQuitarItem={quitarItem} onAbrirCobrar={() => setModal('cobrar')}
+                onCambiarEstadoDirecto={cambiarEstadoDirectoMesa} 
               />
             )}
             
@@ -1070,7 +1134,7 @@ export default function BodegonCocoApp() {
         )}
 
         {modal === 'pin' && <PinModal pinInput={pinInput} setPinInput={setPinInput} pinError={pinError} onConfirmar={intentarLoginAdmin} onClose={() => setModal(null)} />}
-        {modal === 'recibo' && mesaActiva && <ReciboModal mesa={mesaActiva} onClose={() => setModal(null)} onImprimir={imprimirTicket} />}
+        
         {modal === 'cobrar' && mesaActiva && <ConfirmarCobroModal mesa={mesaActiva} onCancelar={() => setModal(null)} onConfirmar={cobrarYCerrar} />}
         {modal === 'producto' && <ProductoFormModal producto={productoEditando} categoriasExistentes={categorias.filter((c) => c !== 'Todas')} onGuardar={guardarProducto} onClose={() => { setModal(null); setProductoEditando(null); }} />}
         
