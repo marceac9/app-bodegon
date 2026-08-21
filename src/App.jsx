@@ -35,7 +35,7 @@ const STYLES = `
   color: var(--text);
   min-height: 100vh;
   width: 100%;
-  max-width: 100%; /* 🚀 AHORA ES FULL SCREEN EN PC Y MANTIENE SU FORMA EN CELULAR */
+  max-width: 100%;
   margin: 0 auto;
   position: relative;
   overflow-x: hidden;
@@ -120,7 +120,7 @@ const STYLES = `
 
 .bottom-bar {
   position: fixed; bottom: 0; left: 0; right: 0; 
-  max-width: 100%; /* 🚀 BARRA DE ABAJO EN FULL SCREEN */
+  max-width: 100%;
   margin: 0 auto;
   background: var(--ink); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
   z-index: 30; box-shadow: 0 -2px 12px rgba(0,0,0,0.18);
@@ -200,7 +200,7 @@ const STYLES = `
     overflow: visible !important; transform: none !important; background: transparent !important;
   }
   
-  /* 🚀 EL TICKET IMPRESO VUELVE AL ESTILO CLÁSICO DE MÁQUINA DE ESCRIBIR */
+  /* 🚀 MANTIENE LA FUENTE CLÁSICA Y LAS MEDIDAS PERFECTAS PARA IMPRESORAS TÉRMICAS */
   .ticket-print-area, .ticket-print-area * { 
     visibility: visible; 
     font-family: Arial, Helvetica, sans-serif !important; 
@@ -214,11 +214,10 @@ const STYLES = `
   }
   .bc-display { font-size: 22px !important; font-weight: 800 !important; }
 
-  /* 🚀 ITEMS CON MONOSPACE PARA QUE QUEDEN ALINEADOS */
   .ticket-row {
     display: flex !important; justify-content: space-between !important;
     font-family: 'Courier New', Courier, monospace !important; font-weight: 600 !important;
-    font-size: 13.5px !important; padding: 2px 0 !important;
+    font-size: 14.5px !important; padding: 3px 0 !important;
   }
   .ticket-row span { font-family: inherit !important; }
   
@@ -387,7 +386,7 @@ function GridMesas({ mesas, onAbrirMesa, justChanged }) {
   );
 }
 
-function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirCobrar, onCambiarEstadoDirecto }) {
+function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirRecibo, onAbrirCobrar, onCambiarEstadoDirecto }) {
   const items = mesa.pedido ? mesa.pedido.items : [];
   const total = items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0);
   const productosFiltrados = categoriaFiltro === 'Todas' ? productos : productos.filter((p) => p.categoria === categoriaFiltro);
@@ -412,7 +411,7 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
             ❌ Cancelar Reserva
           </button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => onCambiarEstadoDirecto(mesa.id, 'Ocupada')}>
-            ✅ Llego el cliente 
+            ✅ Cliente Llegó
           </button>
         </div>
       )}
@@ -482,7 +481,10 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
           <div className="bc-display" style={{ fontSize: 22, fontWeight: 700, color: 'var(--surface)' }}>{formatMoney(total)}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {/* 🚀 BOTÓN DE PRE-TICKET ELIMINADO COMO PEDISTE */}
+          {/* 🚀 BOTÓN TICKET COCINA (SIN PRECIOS) VUELVE A LA PANTALLA PRINCIPAL */}
+          <button className="btn btn-outline-dark" onClick={onAbrirRecibo} disabled={items.length === 0} aria-label="Imprimir Ticket Cocina">
+            <Printer size={16} /> Cocina
+          </button>
           <button className="btn btn-primary" onClick={onAbrirCobrar} disabled={items.length === 0}>
             <Check size={16} /> Cobrar
           </button>
@@ -529,7 +531,37 @@ function PinModal({ pinInput, setPinInput, pinError, onConfirmar, onClose }) {
   );
 }
 
-// 🚀 MODAL DE COBRO (AHORA GENERA EL TICKET FINAL INTELIGENTE)
+// 🚀 TICKET DE COCINA EXCLUSIVO: SIN PRECIOS Y SIN TOTALES
+function TicketCocinaModal({ mesa, onClose, onImprimir }) {
+  const items = mesa.pedido ? mesa.pedido.items : [];
+  const fecha = new Date().toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+  return (
+    <ModalWrapper titulo="Generar Comanda" onClose={onClose}>
+      <div className="ticket ticket-print-area">
+        <div style={{ textAlign: 'center', marginBottom: 6 }}>
+          <div className="bc-display" style={{ fontSize: 16, fontWeight: 700 }}>BODEGÓN COCO</div>
+          <div style={{ fontSize: 11, fontFamily: 'Arial, sans-serif' }}>Mesa {mesa.numero} · {fecha}</div>
+          <div className="bc-display" style={{ fontSize: 18, marginTop: 6 }}>PEDIDO A COCINA</div>
+        </div>
+        <div className="ticket-divider" />
+        {items.map((it) => (
+          <div key={it.productId} className="ticket-row" style={{ justifyContent: 'flex-start', gap: '12px' }}>
+            <span style={{ fontWeight: 900, fontSize: '15px' }}>{it.cantidad}x</span>
+            <span style={{ fontWeight: 600, fontSize: '15px' }}>{it.nombre}</span>
+          </div>
+        ))}
+        <div className="ticket-divider" />
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+        <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={onImprimir}>
+          <Printer size={16} /> Imprimir a Cocina
+        </button>
+      </div>
+    </ModalWrapper>
+  );
+}
+
 function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
   const [metodo, setMetodo] = useState('Efectivo');
   
@@ -605,7 +637,6 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
          </div>
       </div>
 
-      {/* 🚀 EL TICKET FINAL INVISIBLE QUE VA A LA TICKETERA */}
       <div className="print-only ticket-print-area">
         <div style={{ textAlign: 'center', marginBottom: 6 }}>
           <div className="bc-display" style={{ fontSize: 16, fontWeight: 700 }}>BODEGÓN COCO</div>
@@ -638,7 +669,7 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
           <Printer size={16} /> Ticket Final
         </button>
         <button className="btn btn-success" style={{ flex: 1.5, padding: '12px 10px' }} onClick={() => onConfirmar(metodo, totalOrig, ajusteBD, totalFinal)}>
-          <Check size={16} /> Cobrar y Cerrar
+          <Check size={16} /> Cerrar Mesa
         </button>
       </div>
     </ModalWrapper>
@@ -1117,7 +1148,7 @@ export default function BodegonCocoApp() {
               <DetalleMesa
                 mesa={mesaActiva} productos={productos} categorias={categorias} categoriaFiltro={categoriaFiltro}
                 onFiltrar={setCategoriaFiltro} onAgregarItem={agregarItem} onCambiarCantidad={cambiarCantidad}
-                onQuitarItem={quitarItem} onAbrirCobrar={() => setModal('cobrar')}
+                onQuitarItem={quitarItem} onAbrirRecibo={() => setModal('recibo')} onAbrirCobrar={() => setModal('cobrar')}
                 onCambiarEstadoDirecto={cambiarEstadoDirectoMesa} 
               />
             )}
@@ -1134,6 +1165,9 @@ export default function BodegonCocoApp() {
         )}
 
         {modal === 'pin' && <PinModal pinInput={pinInput} setPinInput={setPinInput} pinError={pinError} onConfirmar={intentarLoginAdmin} onClose={() => setModal(null)} />}
+        
+        {/* 🚀 MODAL DE LA COMANDA (AHORA SIN PRECIOS) */}
+        {modal === 'recibo' && mesaActiva && <TicketCocinaModal mesa={mesaActiva} onClose={() => setModal(null)} onImprimir={() => window.print()} />}
         
         {modal === 'cobrar' && mesaActiva && <ConfirmarCobroModal mesa={mesaActiva} onCancelar={() => setModal(null)} onConfirmar={cobrarYCerrar} />}
         {modal === 'producto' && <ProductoFormModal producto={productoEditando} categoriasExistentes={categorias.filter((c) => c !== 'Todas')} onGuardar={guardarProducto} onClose={() => { setModal(null); setProductoEditando(null); }} />}
