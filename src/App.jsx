@@ -4,7 +4,7 @@ import {
   ArrowLeft, Lock, Plus, Minus, Trash2, Printer, X, Users, Check,
   Loader2, Pencil, ChefHat, Wine, UtensilsCrossed, ShieldCheck,
   HandCoins, CreditCard, QrCode, CalendarDays, TrendingUp, ClipboardList,
-  Download, Clock
+  Download, Clock, MessageSquare
 } from 'lucide-react';
 
 const ADMIN_PIN = '1234';
@@ -110,7 +110,7 @@ const STYLES = `
 .btn-add-round { width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--surface); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; margin-left: auto; }
 .btn-add-round:active { transform: scale(0.9); }
 
-.pedido-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); text-align: left; }
+.pedido-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 12px 4px; border-bottom: 1px solid var(--border); text-align: left; }
 .pedido-row:last-child { border-bottom: none; }
 .pedido-row > div:first-child { flex: 1; text-align: left; } 
 
@@ -154,10 +154,10 @@ const STYLES = `
 .mesa-chip-admin button { width: 22px; height: 22px; border-radius: 50%; border: none; background: var(--ocupada-bg); color: var(--ocupada); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
 .aviso { background: var(--ocupada-bg); color: var(--ocupada); padding: 10px 14px; border-radius: 999px; font-size: 13px; margin-bottom: 14px; }
 
-/* Estilos de Pagos */
+/* Estilos de Pagos y Salsas */
 .payment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 16px 0; }
 .payment-btn { border: 1.5px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
-.payment-btn span { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.03em; }
+.payment-btn span { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.03em; text-align: center; }
 .payment-btn.active { border-color: var(--accent); background: #FAF5EA; color: var(--ink); box-shadow: 0 4px 12px rgba(198,146,46,0.15); transform: translateY(-2px); }
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
@@ -266,7 +266,7 @@ function agruparPorCategoria(productos) {
 
 function getCategoryIcon(categoria) {
   const key = (categoria || '').toLowerCase();
-  if (key.includes('comid')) return ChefHat;
+  if (key.includes('comid') || key.includes('salsa')) return ChefHat;
   if (key.includes('bebid')) return Wine;
   return UtensilsCrossed;
 }
@@ -386,7 +386,7 @@ function GridMesas({ mesas, onAbrirMesa, justChanged }) {
   );
 }
 
-function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirRecibo, onAbrirCobrar, onCambiarEstadoDirecto }) {
+function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onIniciarAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirRecibo, onAbrirCobrar, onCambiarEstadoDirecto, onAbrirNota }) {
   const items = mesa.pedido ? mesa.pedido.items : [];
   const total = items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0);
   const productosFiltrados = categoriaFiltro === 'Todas' ? productos : productos.filter((p) => p.categoria === categoriaFiltro);
@@ -440,7 +440,7 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
                   <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{formatMoney(p.precio)}</div>
                 </div>
               </div>
-              <button className="btn-add-round" onClick={() => onAgregarItem(p)} aria-label={`Agregar ${p.nombre}`}>
+              <button className="btn-add-round" onClick={() => onIniciarAgregarItem(p)} aria-label={`Agregar ${p.nombre}`}>
                 <Plus size={18} />
               </button>
             </div>
@@ -453,21 +453,27 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
         {items.length === 0 ? (
           <div style={{ padding: '16px 0', color: 'var(--text-muted)', fontSize: 14 }}>Todavía no agregaste nada de la carta.</div>
         ) : (
-          items.map((it) => (
-            <div key={it.productId} className="pedido-row">
+          items.map((it, idx) => (
+            <div key={`${it.productId}-${idx}`} className="pedido-row">
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{it.nombre}</div>
+                {it.nota && <div style={{ fontSize: 12.5, color: 'var(--accent)', fontWeight: 600, lineHeight: 1.2, marginTop: 3 }}>» {it.nota}</div>}
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatMoney(it.precioUnit)} c/u</div>
               </div>
+              
+              <button className="icon-btn-ghost" onClick={() => onAbrirNota(idx, it.nota)} aria-label="Agregar nota" style={{ color: 'var(--text-muted)' }}>
+                <MessageSquare size={16} />
+              </button>
+
               <div className="stepper">
-                <button onClick={() => onCambiarCantidad(it.productId, -1)} aria-label="Restar unidad"><Minus size={14} /></button>
+                <button onClick={() => onCambiarCantidad(idx, -1)} aria-label="Restar unidad"><Minus size={14} /></button>
                 <span>{it.cantidad}</span>
-                <button onClick={() => onCambiarCantidad(it.productId, 1)} aria-label="Sumar unidad"><Plus size={14} /></button>
+                <button onClick={() => onCambiarCantidad(idx, 1)} aria-label="Sumar unidad"><Plus size={14} /></button>
               </div>
-              <div className="bc-display" style={{ width: 70, textAlign: 'right', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
+              <div className="bc-display" style={{ width: 60, textAlign: 'right', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
                 {formatMoney(it.precioUnit * it.cantidad)}
               </div>
-              <button className="icon-btn-ghost" onClick={() => onQuitarItem(it.productId)} aria-label={`Quitar ${it.nombre}`} style={{ color: 'var(--ocupada)' }}>
+              <button className="icon-btn-ghost" onClick={() => onQuitarItem(idx)} aria-label={`Quitar ${it.nombre}`} style={{ color: 'var(--ocupada)' }}>
                 <Trash2 size={15} />
               </button>
             </div>
@@ -481,7 +487,6 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
           <div className="bc-display" style={{ fontSize: 22, fontWeight: 700, color: 'var(--surface)' }}>{formatMoney(total)}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {/* 🚀 BOTÓN TICKET COCINA (SIN PRECIOS) VUELVE A LA PANTALLA PRINCIPAL */}
           <button className="btn btn-outline-dark" onClick={onAbrirRecibo} disabled={items.length === 0} aria-label="Imprimir Ticket Cocina">
             <Printer size={16} /> Cocina
           </button>
@@ -531,10 +536,68 @@ function PinModal({ pinInput, setPinInput, pinError, onConfirmar, onClose }) {
   );
 }
 
-// 🚀 TICKET DE COCINA EXCLUSIVO: SIN PRECIOS Y SIN TOTALES
+function NotaModal({ notaActual, onGuardar, onClose }) {
+  const [nota, setNota] = useState(notaActual || '');
+  return (
+    <ModalWrapper titulo="Aclaración Libre" onClose={onClose}>
+      <div className="form-field">
+        <label>Escribí el detalle para la cocina</label>
+        <input
+          value={nota}
+          onChange={(e) => setNota(e.target.value)}
+          placeholder="Ej: Sin cebolla, bien cocido..."
+          autoFocus
+          onKeyDown={(e) => { if (e.key === 'Enter') onGuardar(nota); }}
+        />
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+        <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => onGuardar(nota)}>Guardar</button>
+      </div>
+    </ModalWrapper>
+  );
+}
+
+// 🚀 MODAL INTELIGENTE DE SALSAS
+function SeleccionarSalsaModal({ producto, salsasDisponibles, onCancelar, onConfirmar }) {
+  const [salsaElegida, setSalsaElegida] = useState('ninguna'); 
+
+  return (
+    <ModalWrapper titulo={`Salsa para: ${producto.nombre}`} onClose={onCancelar}>
+      <div className="payment-grid">
+        <button className={`payment-btn ${salsaElegida === 'ninguna' ? 'active' : ''}`} onClick={() => setSalsaElegida('ninguna')}>
+          <span>Sin Salsa</span>
+          <span style={{fontSize: 12}}>$0</span>
+        </button>
+        {salsasDisponibles.map(s => (
+          <button key={s.id} className={`payment-btn ${salsaElegida === s.id ? 'active' : ''}`} onClick={() => setSalsaElegida(s.id)}>
+            <span>{s.nombre}</span>
+            <span style={{fontSize: 12}}>+{formatMoney(s.precio)}</span>
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+        <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancelar}>Cancelar</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => onConfirmar(salsasDisponibles.find(x => x.id === salsaElegida) || null)}>
+          <Check size={16} /> Agregar al Pedido
+        </button>
+      </div>
+    </ModalWrapper>
+  );
+}
+
+// 🚀 TICKET DE COCINA (FILTRADO INTELIGENTE: SIN BEBIDAS, SIN PRECIOS)
 function TicketCocinaModal({ mesa, onClose, onImprimir }) {
-  const items = mesa.pedido ? mesa.pedido.items : [];
+  const itemsTodos = mesa.pedido ? mesa.pedido.items : [];
+  
+  // Magia de Arquitecto: Oculta cualquier producto que esté en la categoría "Bebidas"
+  const itemsCocina = itemsTodos.filter(it => {
+    const categoriaMinuscula = (it.categoria || '').toLowerCase();
+    return !categoriaMinuscula.includes('bebid');
+  });
+
   const fecha = new Date().toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+  
   return (
     <ModalWrapper titulo="Generar Comanda" onClose={onClose}>
       <div className="ticket ticket-print-area">
@@ -544,17 +607,32 @@ function TicketCocinaModal({ mesa, onClose, onImprimir }) {
           <div className="bc-display" style={{ fontSize: 18, marginTop: 6 }}>PEDIDO A COCINA</div>
         </div>
         <div className="ticket-divider" />
-        {items.map((it) => (
-          <div key={it.productId} className="ticket-row" style={{ justifyContent: 'flex-start', gap: '12px' }}>
-            <span style={{ fontWeight: 900, fontSize: '15px' }}>{it.cantidad}x</span>
-            <span style={{ fontWeight: 600, fontSize: '15px' }}>{it.nombre}</span>
+        
+        {itemsCocina.length === 0 ? (
+          <div style={{ textAlign: 'center', fontSize: 12, padding: '10px 0', fontStyle: 'italic' }}>
+            No hay platos de cocina en este pedido.
           </div>
-        ))}
+        ) : (
+          itemsCocina.map((it, idx) => (
+            <div key={idx} style={{ marginBottom: '4px' }}>
+              <div className="ticket-row" style={{ justifyContent: 'flex-start', gap: '12px', paddingBottom: 0 }}>
+                <span style={{ fontWeight: 900, fontSize: '15px' }}>{it.cantidad}x</span>
+                <span style={{ fontWeight: 600, fontSize: '15px' }}>{it.nombre}</span>
+              </div>
+              {it.nota && (
+                <div style={{ fontSize: '14px', fontWeight: 600, paddingLeft: '28px', color: '#333' }}>
+                  » {it.nota}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+        
         <div className="ticket-divider" />
       </div>
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Cancelar</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={onImprimir}>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={onImprimir} disabled={itemsCocina.length === 0}>
           <Printer size={16} /> Imprimir a Cocina
         </button>
       </div>
@@ -643,10 +721,17 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
           <div style={{ fontSize: 11, fontFamily: 'Arial, sans-serif' }}>Mesa {mesa.numero} · {fecha}</div>
         </div>
         <div className="ticket-divider" />
-        {items.map((it) => (
-          <div key={it.productId} className="ticket-row">
-            <span>{it.cantidad} x {it.nombre}</span>
-            <span>{formatMoney(it.precioUnit * it.cantidad)}</span>
+        {items.map((it, idx) => (
+          <div key={idx} style={{ marginBottom: '2px' }}>
+            <div className="ticket-row" style={{ paddingBottom: 0 }}>
+              <span>{it.cantidad} x {it.nombre}</span>
+              <span>{formatMoney(it.precioUnit * it.cantidad)}</span>
+            </div>
+            {it.nota && (
+              <div style={{ fontSize: '11px', paddingLeft: '14px', color: '#555', fontStyle: 'italic' }}>
+                » {it.nota}
+              </div>
+            )}
           </div>
         ))}
         <div className="ticket-divider" />
@@ -922,6 +1007,14 @@ export default function BodegonCocoApp() {
   const [modal, setModal] = useState(null);
   const [productoEditando, setProductoEditando] = useState(null);
   const [ventaAEliminar, setVentaAEliminar] = useState(null); 
+  const [itemNota, setItemNota] = useState(null); 
+  
+  // 🚀 ESTADOS NUEVOS PARA LA SELECCIÓN INTELIGENTE DE SALSAS
+  const [productoParaSalsa, setProductoParaSalsa] = useState(null);
+  const salsasDisponibles = useMemo(() => {
+    return productos.filter(p => p.nombre.toLowerCase().includes('salsa'));
+  }, [productos]);
+
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
   const [justChanged, setJustChanged] = useState(null);
@@ -1000,42 +1093,89 @@ export default function BodegonCocoApp() {
   function abrirMesa(mesaId) { setMesaActivaId(mesaId); setCategoriaFiltro('Todas'); setVista('mesa'); }
   function volverAGrid() { setVista('grid'); setMesaActivaId(null); }
 
-  function agregarItem(producto) {
+  // 🚀 PASO 1: INTERCEPTOR DE PASTAS
+  function iniciarAgregarItem(producto) {
+    const esPasta = /raviol|sorrentino|ñoqui|fideo|tallarin|espagueti|canelon|pasta|macarron/i.test(producto.nombre);
+    const esSalsa = producto.nombre.toLowerCase().includes('salsa');
+    
+    if (esPasta && !esSalsa && salsasDisponibles.length > 0) {
+       setProductoParaSalsa(producto);
+       setModal('seleccionar_salsa');
+    } else {
+       agregarItemConfirmado(producto, null);
+    }
+  }
+
+  // 🚀 PASO 2: AGREGADO REAL DEL PRODUCTO (CON O SIN SALSA)
+  function agregarItemConfirmado(producto, salsaSeleccionada) {
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
     if (!mesaActual) return;
     const eraLibreO_Reservada = mesaActual.estado === 'Libre' || mesaActual.estado === 'Reservada';
     
+    // Matemática mágica para fusionar la pasta y la salsa
+    let nombreFinal = producto.nombre;
+    let precioFinal = producto.precio;
+    let varianteKey = null;
+
+    if (salsaSeleccionada) {
+      nombreFinal = `${producto.nombre} con ${salsaSeleccionada.nombre}`;
+      precioFinal = producto.precio + salsaSeleccionada.precio;
+      varianteKey = salsaSeleccionada.id; // Clave para que no se mezcle con una pasta sola
+    }
+
     let nuevoPedido;
     if (mesaActual.pedido) {
       nuevoPedido = { ...mesaActual.pedido, items: [...mesaActual.pedido.items] };
-      const idx = nuevoPedido.items.findIndex((it) => it.productId === producto.id);
-      if (idx >= 0) nuevoPedido.items[idx] = { ...nuevoPedido.items[idx], cantidad: nuevoPedido.items[idx].cantidad + 1 };
-      else nuevoPedido.items.push({ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 });
+      // Busca si ya pidieron exactamente esta misma pasta con esta misma salsa
+      const idx = nuevoPedido.items.findIndex((it) => it.productId === producto.id && it.variante === varianteKey && !it.nota);
+      if (idx >= 0) {
+        nuevoPedido.items[idx] = { ...nuevoPedido.items[idx], cantidad: nuevoPedido.items[idx].cantidad + 1 };
+      } else {
+        nuevoPedido.items.push({ productId: producto.id, nombre: nombreFinal, precioUnit: precioFinal, cantidad: 1, nota: '', categoria: producto.categoria, variante: varianteKey });
+      }
     } else {
-      nuevoPedido = { abiertoEn: Date.now(), items: [{ productId: producto.id, nombre: producto.nombre, precioUnit: producto.precio, cantidad: 1 }] };
+      nuevoPedido = { abiertoEn: Date.now(), items: [{ productId: producto.id, nombre: nombreFinal, precioUnit: precioFinal, cantidad: 1, nota: '', categoria: producto.categoria, variante: varianteKey }] };
     }
 
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, estado: 'Ocupada', pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
     if (eraLibreO_Reservada) { setJustChanged(mesaActivaId); setTimeout(() => setJustChanged(null), 450); }
+    
+    setModal(null);
+    setProductoParaSalsa(null);
   }
 
-  function cambiarCantidad(productId, delta) {
+  function cambiarCantidad(idxLinea, delta) {
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
     if (!mesaActual || !mesaActual.pedido) return;
-    const itemsActualizados = mesaActual.pedido.items.map((it) => (it.productId === productId ? { ...it, cantidad: it.cantidad + delta } : it)).filter((it) => it.cantidad > 0);
+    const itemsActualizados = [...mesaActual.pedido.items];
+    itemsActualizados[idxLinea] = { ...itemsActualizados[idxLinea], cantidad: itemsActualizados[idxLinea].cantidad + delta };
+    const filtrados = itemsActualizados.filter(it => it.cantidad > 0);
+    const nuevoPedido = { ...mesaActual.pedido, items: filtrados };
+    setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
+    guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
+  }
+
+  function quitarItem(idxLinea) {
+    const mesaActual = mesas.find((m) => m.id === mesaActivaId);
+    if (!mesaActual || !mesaActual.pedido) return;
+    const itemsActualizados = mesaActual.pedido.items.filter((_, i) => i !== idxLinea);
     const nuevoPedido = { ...mesaActual.pedido, items: itemsActualizados };
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
   }
 
-  function quitarItem(productId) {
+  function guardarNotaItem(nuevaNota) {
+    if (!itemNota) return;
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
     if (!mesaActual || !mesaActual.pedido) return;
-    const itemsActualizados = mesaActual.pedido.items.filter((it) => it.productId !== productId);
+    const itemsActualizados = [...mesaActual.pedido.items];
+    itemsActualizados[itemNota.index] = { ...itemsActualizados[itemNota.index], nota: nuevaNota };
     const nuevoPedido = { ...mesaActual.pedido, items: itemsActualizados };
+    
     setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, pedido: nuevoPedido } : m));
     guardarMesaDB(mesaActivaId, 'Ocupada', nuevoPedido);
+    setItemNota(null);
   }
 
   function cambiarEstadoDirectoMesa(mesaId, nuevoEstado) {
@@ -1147,9 +1287,10 @@ export default function BodegonCocoApp() {
             {vista === 'mesa' && mesaActiva && (
               <DetalleMesa
                 mesa={mesaActiva} productos={productos} categorias={categorias} categoriaFiltro={categoriaFiltro}
-                onFiltrar={setCategoriaFiltro} onAgregarItem={agregarItem} onCambiarCantidad={cambiarCantidad}
+                onFiltrar={setCategoriaFiltro} onIniciarAgregarItem={iniciarAgregarItem} onCambiarCantidad={cambiarCantidad}
                 onQuitarItem={quitarItem} onAbrirRecibo={() => setModal('recibo')} onAbrirCobrar={() => setModal('cobrar')}
-                onCambiarEstadoDirecto={cambiarEstadoDirectoMesa} 
+                onCambiarEstadoDirecto={cambiarEstadoDirectoMesa}
+                onAbrirNota={(index, notaActual) => setItemNota({ index, notaActual })}
               />
             )}
             
@@ -1166,11 +1307,22 @@ export default function BodegonCocoApp() {
 
         {modal === 'pin' && <PinModal pinInput={pinInput} setPinInput={setPinInput} pinError={pinError} onConfirmar={intentarLoginAdmin} onClose={() => setModal(null)} />}
         
-        {/* 🚀 MODAL DE LA COMANDA (AHORA SIN PRECIOS) */}
         {modal === 'recibo' && mesaActiva && <TicketCocinaModal mesa={mesaActiva} onClose={() => setModal(null)} onImprimir={() => window.print()} />}
         
         {modal === 'cobrar' && mesaActiva && <ConfirmarCobroModal mesa={mesaActiva} onCancelar={() => setModal(null)} onConfirmar={cobrarYCerrar} />}
+        
+        {modal === 'seleccionar_salsa' && productoParaSalsa && (
+          <SeleccionarSalsaModal 
+            producto={productoParaSalsa} 
+            salsasDisponibles={salsasDisponibles} 
+            onCancelar={() => { setModal(null); setProductoParaSalsa(null); }} 
+            onConfirmar={(salsa) => agregarItemConfirmado(productoParaSalsa, salsa)} 
+          />
+        )}
+        
         {modal === 'producto' && <ProductoFormModal producto={productoEditando} categoriasExistentes={categorias.filter((c) => c !== 'Todas')} onGuardar={guardarProducto} onClose={() => { setModal(null); setProductoEditando(null); }} />}
+        
+        {itemNota && <NotaModal notaActual={itemNota.notaActual} onClose={() => setItemNota(null)} onGuardar={guardarNotaItem} />}
         
         {modal === 'eliminar_venta' && <ConfirmarEliminarVentaModal venta={ventaAEliminar} onCancelar={() => { setModal(null); setVentaAEliminar(null); }} onConfirmar={confirmarEliminacionVenta} />}
       </div>
