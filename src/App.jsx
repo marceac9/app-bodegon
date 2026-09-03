@@ -7,7 +7,7 @@ import {
   Download, Clock, MessageSquare, ArrowDownRight
 } from 'lucide-react';
 
-import './app.css'; 
+import './App.css'; 
 
 const ADMIN_PIN_HASH = import.meta.env.VITE_ADMIN_PIN_HASH;
 
