@@ -4,230 +4,12 @@ import {
   ArrowLeft, Lock, Plus, Minus, Trash2, Printer, X, Users, Check,
   Loader2, Pencil, ChefHat, Wine, UtensilsCrossed, ShieldCheck,
   HandCoins, CreditCard, QrCode, CalendarDays, TrendingUp, ClipboardList,
-  Download, Clock, MessageSquare
+  Download, Clock, MessageSquare, ArrowDownRight
 } from 'lucide-react';
 
-const ADMIN_PIN = '1234';
+import './app.css'; 
 
-const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap');
-
-:root {
-  --ink: #1F2E3D;
-  --bg: #EEE9DC;
-  --surface: #FFFDF8;
-  --accent: #C6922E;
-  --libre: #3E8659;
-  --libre-bg: #E3F0E6;
-  --ocupada: #B33A3A;
-  --ocupada-bg: #F6E4E2;
-  --reservada: #D35400;
-  --reservada-bg: #FDEBD0;
-  --text: #241F18;
-  --text-muted: #7C7261;
-  --border: #DEDBC9;
-}
-
-.bc-app * { box-sizing: border-box; }
-.bc-app {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  position: relative;
-  overflow-x: hidden;
-}
-
-.bc-display { font-family: 'Oswald', sans-serif; }
-.bc-script { font-family: 'Caveat', cursive; }
-
-.bc-header {
-  position: sticky; top: 0; z-index: 20;
-  background: var(--ink); color: var(--surface);
-  padding: 14px 20px; display: flex; align-items: center; gap: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
-}
-.banner-error { background: var(--ocupada-bg); color: var(--ocupada); font-size: 12.5px; text-align: center; padding: 8px 12px; }
-
-.role-btn, .role-badge-active {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: .03em; text-transform: uppercase;
-  padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25);
-  background: rgba(255,255,255,0.1); color: var(--surface); white-space: nowrap; cursor: pointer;
-}
-.role-btn-active, .role-badge-active { background: var(--accent); border-color: var(--accent); color: #241505; }
-
-.icon-btn-ghost {
-  background: transparent; border: none; color: inherit; padding: 6px;
-  display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; cursor: pointer;
-}
-
-.section-label {
-  font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--text-muted); margin: 20px 2px 10px;
-}
-
-.table-card {
-  background: var(--surface); border-radius: 16px; border: 1px solid var(--border);
-  padding: 14px; display: flex; flex-direction: column; gap: 8px; cursor: pointer;
-  border-top: 5px solid var(--border);
-  transition: transform .15s ease, border-color .3s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-.table-card:active { transform: scale(0.97); }
-.table-card.libre { border-top-color: var(--libre); }
-.table-card.ocupada { border-top-color: var(--ocupada); }
-.table-card.reservada { border-top-color: var(--reservada); } 
-
-@keyframes statusPop { 0% { transform: scale(1); } 40% { transform: scale(1.045); } 100% { transform: scale(1); } }
-.status-changed { animation: statusPop .45s ease; }
-
-.status-pill {
-  display: inline-flex; align-items: center; font-family: 'Oswald', sans-serif; font-size: 11px;
-  letter-spacing: .05em; padding: 4px 9px; border-radius: 999px; font-weight: 600; flex-shrink: 0;
-}
-.status-pill.libre { background: var(--libre-bg); color: var(--libre); }
-.status-pill.ocupada { background: var(--ocupada-bg); color: var(--ocupada); }
-.status-pill.reservada { background: var(--reservada-bg); color: var(--reservada); } 
-
-.chips-row { display: flex; gap: 8px; overflow-x: auto; padding: 14px 16px 4px; scrollbar-width: none; }
-.chips-row::-webkit-scrollbar { display: none; }
-.chip {
-  font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: .02em; padding: 8px 15px;
-  border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-muted);
-  white-space: nowrap; flex-shrink: 0; cursor: pointer;
-}
-.chip.active { background: var(--ink); border-color: var(--ink); color: var(--surface); }
-
-.menu-row { display: flex; align-items: center; justify-content: flex-start; padding: 12px 4px; border-bottom: 1px solid var(--border); gap: 14px; text-align: left; }
-.menu-row:last-child { border-bottom: none; }
-.menu-row > div:nth-child(2) { flex: 1; text-align: left; } 
-
-.menu-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); color: var(--ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.btn-add-round { width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--surface); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; margin-left: auto; }
-.btn-add-round:active { transform: scale(0.9); }
-
-.pedido-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 12px 4px; border-bottom: 1px solid var(--border); text-align: left; }
-.pedido-row:last-child { border-bottom: none; }
-.pedido-row > div:first-child { flex: 1; text-align: left; } 
-
-.stepper { display: flex; align-items: center; gap: 8px; background: var(--bg); border-radius: 10px; padding: 4px 6px; flex-shrink: 0; }
-.stepper button { width: 26px; height: 26px; border: none; background: var(--surface); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; }
-.stepper span { min-width: 18px; text-align: center; font-weight: 700; font-size: 14px; }
-
-.bottom-bar {
-  position: fixed; bottom: 0; left: 0; right: 0; 
-  max-width: 100%;
-  margin: 0 auto;
-  background: var(--ink); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
-  z-index: 30; box-shadow: 0 -2px 12px rgba(0,0,0,0.18);
-}
-
-.btn {
-  font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .03em; font-weight: 600;
-  border: none; border-radius: 12px; padding: 12px 18px; display: inline-flex; align-items: center;
-  justify-content: center; gap: 8px; cursor: pointer; font-size: 13.5px;
-}
-.btn:active { transform: scale(0.97); }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.btn-primary { background: var(--accent); color: #241505; }
-.btn-success { background: var(--libre); color: #fff; }
-.btn-warning { background: var(--reservada); color: #fff; }
-.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-.btn-outline-dark { background: transparent; border: 1.5px solid rgba(255,255,255,0.35); color: var(--surface); padding: 12px 14px; }
-
-/* Estilos Admin y Ventas */
-.admin-tabs { display: flex; background: rgba(0,0,0,0.05); padding: 6px; border-radius: 12px; margin-bottom: 20px; }
-.admin-tab { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: .03em; font-size: 14px; cursor: pointer; color: var(--text-muted); }
-.admin-tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-.admin-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); text-align: left; }
-.admin-row:last-child { border-bottom: none; }
-.admin-row > div:first-child { flex: 1; text-align: left; }
-
-.icon-btn { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
-.icon-btn-danger { color: var(--ocupada); border-color: var(--ocupada-bg); }
-.mesa-chip-admin { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 8px 8px 8px 14px; font-size: 13.5px; }
-.mesa-chip-admin button { width: 22px; height: 22px; border-radius: 50%; border: none; background: var(--ocupada-bg); color: var(--ocupada); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-.aviso { background: var(--ocupada-bg); color: var(--ocupada); padding: 10px 14px; border-radius: 999px; font-size: 13px; margin-bottom: 14px; }
-
-/* Estilos de Pagos y Salsas */
-.payment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 16px 0; }
-.payment-btn { border: 1.5px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
-.payment-btn span { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.03em; text-align: center; }
-.payment-btn.active { border-color: var(--accent); background: #FAF5EA; color: var(--ink); box-shadow: 0 4px 12px rgba(198,146,46,0.15); transform: translateY(-2px); }
-
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.stat-card { background: var(--ink); color: var(--surface); padding: 20px; border-radius: 16px; position: relative; overflow: hidden; }
-.stat-label { font-family: 'Oswald', sans-serif; font-size: 13px; opacity: 0.7; letter-spacing: 0.05em; margin-bottom: 6px; }
-.stat-val { font-size: 32px; font-weight: 700; line-height: 1; }
-.venta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-
-.form-field { margin-bottom: 14px; }
-.form-field label { display: block; font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
-.form-field input, .form-field select { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--border); font-size: 15px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text); }
-.form-field input:focus, .form-field select:focus { outline: none; border-color: var(--accent); }
-
-.pin-input { width: 100%; font-size: 32px; letter-spacing: 16px; text-align: center; padding: 16px 10px 16px 20px; border-radius: 12px; border: 1.5px solid var(--border); font-family: 'Oswald', sans-serif; color: var(--text); background: var(--surface); }
-.pin-input:focus { outline: none; border-color: var(--accent); }
-
-.modal-overlay { position: fixed; inset: 0; background: rgba(31,46,61,0.55); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
-.modal-sheet { background: var(--surface); width: 100%; max-width: 600px; border-radius: 24px 24px 0 0; padding: 24px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease; margin: 0 auto; }
-@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-.ticket { font-family: 'Inter', monospace; background: #fff; color: #171310; padding: 16px; border-radius: 8px; border: 1px dashed #B8AF9C; }
-
-/* 🚀 CLASE OCULTA PARA IMPRIMIR DESDE EL FONDO SIN ENSUCIAR LA WEB */
-.print-only { position: absolute; left: -9999px; visibility: hidden; }
-
-.bc-app button, .bc-app input, .bc-app select { font-family: inherit; }
-.bc-app button:focus-visible, .bc-app input:focus-visible, .bc-app select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .bc-app * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-}
-
-@media print {
-  @page { margin: 5mm 0 0 0; }
-  body { background: white; }
-  body * { visibility: hidden; }
-  
-  .modal-overlay, .modal-sheet {
-    position: absolute !important; top: 0 !important; left: 0 !important;
-    overflow: visible !important; transform: none !important; background: transparent !important;
-  }
-  
-  /* 🚀 MANTIENE LA FUENTE CLÁSICA Y LAS MEDIDAS PERFECTAS PARA IMPRESORAS TÉRMICAS */
-  .ticket-print-area, .ticket-print-area * { 
-    visibility: visible; 
-    font-family: Arial, Helvetica, sans-serif !important; 
-    color: black !important;
-    -webkit-font-smoothing: none !important; 
-    text-rendering: crispEdges !important; 
-  }
-  .ticket-print-area { 
-    position: absolute !important; top: 0 !important; left: 0 !important; 
-    width: 74mm !important; padding: 5mm !important; margin: 0 !important; border: none !important; 
-  }
-  .bc-display { font-size: 22px !important; font-weight: 800 !important; }
-
-  .ticket-row {
-    display: flex !important; justify-content: space-between !important;
-    font-family: 'Courier New', Courier, monospace !important; font-weight: 600 !important;
-    font-size: 14.5px !important; padding: 3px 0 !important;
-  }
-  .ticket-row span { font-family: inherit !important; }
-  
-  .ticket-row.total-row, .ticket-row.total-row span {
-    font-family: Arial, Helvetica, sans-serif !important; font-weight: 900 !important;
-    font-size: 18px !important; padding-top: 6px !important;
-  }
-  .ticket-divider { border-top: 1px dashed #B8AF9C !important; margin: 8px 0 !important; }
-}
-`;
+const ADMIN_PIN_HASH = import.meta.env.VITE_ADMIN_PIN_HASH;
 
 function formatMoney(n) {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0);
@@ -282,13 +64,16 @@ function LoadingScreen() {
 
 function Header({ vista, mesa, rol, onBack, onAbrirLoginAdmin, onIrAdmin }) {
   return (
-    <div className="bc-header">
-      {vista !== 'grid' && (
-        <button className="icon-btn-ghost" onClick={onBack} aria-label="Volver">
-          <ArrowLeft size={22} />
-        </button>
-      )}
-      <div style={{ flex: 1, minWidth: 0 }}>
+    <div className="bc-header" style={{ justifyContent: 'space-between' }}>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
+        {vista !== 'grid' && (
+          <button className="icon-btn-ghost" onClick={onBack} aria-label="Volver">
+            <ArrowLeft size={22} />
+          </button>
+        )}
+      </div>
+      
+      <div style={{ flex: 2, textAlign: 'center', minWidth: 0 }}>
         {vista === 'grid' && (
           <>
             <div className="bc-script" style={{ fontSize: 27, lineHeight: 1, color: 'var(--accent)' }}>Bodegón Coco</div>
@@ -298,21 +83,22 @@ function Header({ vista, mesa, rol, onBack, onAbrirLoginAdmin, onIrAdmin }) {
         {vista === 'mesa' && mesa && (
           <>
             <div className="bc-display" style={{ fontSize: 19, fontWeight: 600 }}>Mesa {mesa.numero}</div>
-            <div style={{ fontSize: 12, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ fontSize: 12, opacity: 0.75, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <Users size={12} /> {mesa.capacidad} · {mesa.estado === 'Ocupada' || mesa.estado === 'Reservada' ? tiempoAbierta(mesa.pedido && mesa.pedido.abiertoEn) : 'Libre'}
             </div>
           </>
         )}
         {vista === 'admin' && <div className="bc-display" style={{ fontSize: 19, fontWeight: 600 }}>Panel admin</div>}
       </div>
-      <div>
+
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
         {rol === 'mozo' ? (
           <button className="role-btn" onClick={onAbrirLoginAdmin}>
             <Lock size={13} /> Admin
           </button>
         ) : vista !== 'admin' ? (
           <button className="role-btn role-btn-active" onClick={onIrAdmin}>
-            <ShieldCheck size={13} /> Panel admin
+            <ShieldCheck size={13} /> Admin
           </button>
         ) : (
           <span className="role-badge-active">
@@ -386,7 +172,7 @@ function GridMesas({ mesas, onAbrirMesa, justChanged }) {
   );
 }
 
-function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onIniciarAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirRecibo, onAbrirCobrar, onCambiarEstadoDirecto, onAbrirNota }) {
+function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, onIniciarAgregarItem, onCambiarCantidad, onQuitarItem, onAbrirRecibo, onAbrirCobrar, onCambiarEstadoDirecto, onAbrirNota, onAbrirCancelarMesa }) {
   const items = mesa.pedido ? mesa.pedido.items : [];
   const total = items.reduce((a, it) => a + it.precioUnit * it.cantidad, 0);
   const productosFiltrados = categoriaFiltro === 'Todas' ? productos : productos.filter((p) => p.categoria === categoriaFiltro);
@@ -396,7 +182,6 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
 
   return (
     <div style={{ paddingBottom: 100 }}>
-      
       {esLibre && items.length === 0 && (
         <div style={{ padding: '16px 16px 0' }}>
           <button className="btn btn-warning" style={{ width: '100%' }} onClick={() => onCambiarEstadoDirecto(mesa.id, 'Reservada')}>
@@ -487,8 +272,13 @@ function DetalleMesa({ mesa, productos, categorias, categoriaFiltro, onFiltrar, 
           <div className="bc-display" style={{ fontSize: 22, fontWeight: 700, color: 'var(--surface)' }}>{formatMoney(total)}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          {/* 🚀 BOTÓN DE CANCELAR MESA (Tacho de basura rojo) */}
+          <button className="btn btn-outline" style={{ padding: '12px 14px', borderColor: 'var(--ocupada)', color: 'var(--ocupada)' }} onClick={onAbrirCancelarMesa} title="Cancelar Mesa">
+            <Trash2 size={16} />
+          </button>
+
           <button className="btn btn-outline-dark" onClick={onAbrirRecibo} disabled={items.length === 0} aria-label="Imprimir Ticket Cocina">
-            <Printer size={16} /> Cocina
+            <Printer size={16} />
           </button>
           <button className="btn btn-primary" onClick={onAbrirCobrar} disabled={items.length === 0}>
             <Check size={16} /> Cobrar
@@ -536,6 +326,47 @@ function PinModal({ pinInput, setPinInput, pinError, onConfirmar, onClose }) {
   );
 }
 
+function EgresoModal({ onGuardar, onClose }) {
+  const [motivo, setMotivo] = useState('');
+  const [monto, setMonto] = useState('');
+  const [metodo, setMetodo] = useState('Efectivo');
+  const [error, setError] = useState('');
+
+  function handleGuardar() {
+    if (!motivo.trim()) { setError('Ingresá el motivo del egreso.'); return; }
+    const montoNum = parseFloat(monto);
+    if (isNaN(montoNum) || montoNum <= 0) { setError('Ingresá un monto válido mayor a 0.'); return; }
+    onGuardar(motivo.trim(), montoNum, metodo);
+  }
+
+  return (
+    <ModalWrapper titulo="Registrar Egreso (Salida de dinero)" onClose={onClose}>
+      <div className="form-field">
+        <label>Motivo del Egreso</label>
+        <input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Ej: Compra de hielo, pago a proveedor..." autoFocus />
+      </div>
+      <div className="form-field">
+        <label>Monto ($)</label>
+        <input type="number" inputMode="decimal" min="0" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0" />
+      </div>
+      <div className="form-field">
+        <label>Método de salida</label>
+        <select value={metodo} onChange={(e) => setMetodo(e.target.value)}>
+          <option value="Efectivo">Efectivo (Caja física)</option>
+          <option value="Transferencia">Transferencia (Cuenta banco)</option>
+        </select>
+      </div>
+      {error && <div style={{ color: 'var(--ocupada)', fontSize: 12.5, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+        <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" style={{ flex: 1, background: 'var(--ocupada)', color: '#fff' }} onClick={handleGuardar}>
+          <ArrowDownRight size={16} /> Guardar Egreso
+        </button>
+      </div>
+    </ModalWrapper>
+  );
+}
+
 function NotaModal({ notaActual, onGuardar, onClose }) {
   const [nota, setNota] = useState(notaActual || '');
   return (
@@ -558,7 +389,6 @@ function NotaModal({ notaActual, onGuardar, onClose }) {
   );
 }
 
-// 🚀 MODAL INTELIGENTE DE SALSAS
 function SeleccionarSalsaModal({ producto, salsasDisponibles, onCancelar, onConfirmar }) {
   const [salsaElegida, setSalsaElegida] = useState('ninguna'); 
 
@@ -586,11 +416,8 @@ function SeleccionarSalsaModal({ producto, salsasDisponibles, onCancelar, onConf
   );
 }
 
-// 🚀 TICKET DE COCINA (FILTRADO INTELIGENTE: SIN BEBIDAS, SIN PRECIOS)
 function TicketCocinaModal({ mesa, onClose, onImprimir }) {
   const itemsTodos = mesa.pedido ? mesa.pedido.items : [];
-  
-  // Magia de Arquitecto: Oculta cualquier producto que esté en la categoría "Bebidas"
   const itemsCocina = itemsTodos.filter(it => {
     const categoriaMinuscula = (it.categoria || '').toLowerCase();
     return !categoriaMinuscula.includes('bebid');
@@ -649,7 +476,7 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
   let descuento = 0;
   let recargo = 0;
   
-  if (metodo === 'Efectivo') descuento = totalOrig * 0.10;
+  if (metodo === 'Efectivo') descuento = totalOrig * 0.05;
   if (metodo === 'Crédito') recargo = totalOrig * 0.10;
   if (metodo === 'QR') recargo = totalOrig * 0.05;
 
@@ -663,7 +490,7 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
       <div className="payment-grid">
         <button className={`payment-btn ${metodo === 'Efectivo' ? 'active' : ''}`} onClick={() => setMetodo('Efectivo')}>
           <HandCoins size={28} />
-          <span>Efectivo (10% OFF)</span>
+          <span>Efectivo (5% OFF)</span>
         </button>
         <button className={`payment-btn ${metodo === 'Débito' ? 'active' : ''}`} onClick={() => setMetodo('Débito')}>
           <CreditCard size={28} />
@@ -689,7 +516,7 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
               
               {metodo === 'Efectivo' && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--libre)', marginBottom: 8, fontWeight: 600 }}>
-                  <span>Descuento 10%:</span>
+                  <span>Descuento 5%:</span>
                   <span>-{formatMoney(descuento)}</span>
                 </div>
               )}
@@ -761,19 +588,37 @@ function ConfirmarCobroModal({ mesa, onCancelar, onConfirmar }) {
   );
 }
 
+// 🚀 MODAL NUEVO PARA CANCELAR MESA SIN COBRAR
+function ConfirmarCancelarMesaModal({ mesa, onCancelar, onConfirmar }) {
+  if (!mesa) return null;
+  return (
+    <ModalWrapper titulo={`Cancelar Mesa ${mesa.numero}`} onClose={onCancelar}>
+      <p style={{ fontSize: 14, marginBottom: 18, marginTop: 0 }}>
+        ¿Estás seguro de que querés limpiar esta mesa sin cobrar? Se borrará todo el pedido actual y <strong>no se registrará en las ventas</strong>.
+      </p>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancelar}>Volver</button>
+        <button className="btn btn-primary" style={{ flex: 1, background: 'var(--ocupada)', color: '#fff' }} onClick={onConfirmar}>
+          <Trash2 size={16} /> Limpiar Mesa
+        </button>
+      </div>
+    </ModalWrapper>
+  );
+}
+
 function ConfirmarEliminarVentaModal({ venta, onCancelar, onConfirmar }) {
   if (!venta) return null;
   return (
-    <ModalWrapper titulo="Eliminar Venta" onClose={onCancelar}>
+    <ModalWrapper titulo="Eliminar Registro" onClose={onCancelar}>
       <p style={{ fontSize: 14, marginBottom: 4, marginTop: 0 }}>
-        ¿Estás seguro de que querés borrar este cobro del sistema?
+        ¿Estás seguro de que querés borrar este registro del sistema?
       </p>
       <div style={{ margin: '16px 0', padding: 14, background: 'var(--ocupada-bg)', borderRadius: 12, color: 'var(--ocupada)' }}>
         <div style={{ fontWeight: 600, fontSize: 15 }}>{venta.metodo_pago}</div>
         <div className="bc-display" style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>{formatMoney(venta.total_final)}</div>
       </div>
       <p style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 18 }}>
-        El monto se va a restar automáticamente de la caja del día y del mes. Esta acción no se puede deshacer.
+        Se va a descontar automáticamente de los reportes. Esta acción no se puede deshacer.
       </p>
       <div style={{ display: 'flex', gap: 10 }}>
         <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancelar}>Cancelar</button>
@@ -822,7 +667,7 @@ function ProductoFormModal({ producto, categoriasExistentes, onGuardar, onClose 
   );
 }
 
-function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEditarProducto, onEliminarProducto, onAgregarMesa, onEliminarMesa, avisoMesas, onAbrirEliminarVenta }) {
+function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEditarProducto, onEliminarProducto, onAgregarMesa, onEliminarMesa, avisoMesas, onAbrirEliminarVenta, onAbrirEgreso }) {
   const [tab, setTab] = useState('menu'); 
   const grupos = agruparPorCategoria(productos);
 
@@ -853,18 +698,19 @@ function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEdit
   const totalHoy = ventasHoy.reduce((acc, v) => acc + v.total_final, 0);
 
   const exportarExcel = () => {
-    const cabeceras = ['Fecha', 'Hora', 'Metodo de Pago', 'Subtotal', 'Ajuste (Descuento/Recargo)', 'Total Final'];
+    const cabeceras = ['Fecha', 'Hora', 'Metodo de Pago', 'Tipo', 'Monto Real', 'Total Base'];
     const filas = ventasMes.map(v => {
       const d = new Date(v.creado_en);
       const fecha = d.toLocaleDateString('es-AR');
       const hora = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      const tipo = v.total_final < 0 ? 'EGRESO' : 'INGRESO';
       return [
         fecha,
         hora,
         v.metodo_pago,
-        v.total_original,
-        v.descuento * -1, 
-        v.total_final
+        tipo,
+        v.total_final, 
+        v.total_original
       ].join(';'); 
     });
 
@@ -873,7 +719,7 @@ function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEdit
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Ventas_Bodegon_${mesFiltro}.csv`);
+    link.setAttribute('download', `Caja_Bodegon_${mesFiltro}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -888,7 +734,7 @@ function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEdit
           <ClipboardList size={16} style={{display:'inline', verticalAlign:'middle', marginRight:4, marginTop:-2}}/> Menú y Mesas
         </button>
         <button className={`admin-tab ${tab === 'historial' ? 'active' : ''}`} onClick={() => setTab('historial')}>
-          <TrendingUp size={16} style={{display:'inline', verticalAlign:'middle', marginRight:4, marginTop:-2}}/> Ventas
+          <TrendingUp size={16} style={{display:'inline', verticalAlign:'middle', marginRight:4, marginTop:-2}}/> Caja
         </button>
       </div>
 
@@ -948,45 +794,58 @@ function PanelAdmin({ productos, mesas, ventas, onSalir, onNuevoProducto, onEdit
 
           <div className="stats-grid">
             <div className="stat-card" style={{ background: 'var(--libre)'}}>
-              <div className="stat-label">Caja de Hoy (Real)</div>
+              <div className="stat-label">Caja Balance Hoy</div>
               <div className="bc-display stat-val">{formatMoney(totalHoy)}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Total Mes Selec.</div>
+              <div className="stat-label">Caja Mes Selec.</div>
               <div className="bc-display stat-val">{formatMoney(totalMes)}</div>
             </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 }}>
-             <div className="section-label" style={{ margin: 0 }}>Ventas del mes</div>
-             <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: 12 }} onClick={exportarExcel} disabled={ventasMes.length === 0}>
-               <Download size={14} /> Exportar Excel
-             </button>
+             <div className="section-label" style={{ margin: 0 }}>Registros</div>
+             <div style={{ display: 'flex', gap: '8px'}}>
+                <button className="btn btn-outline" style={{ padding: '6px 10px', fontSize: 11, borderColor: 'var(--ocupada)', color: 'var(--ocupada)' }} onClick={onAbrirEgreso}>
+                  <Minus size={14} /> Egreso
+                </button>
+                <button className="btn btn-outline" style={{ padding: '6px 10px', fontSize: 11 }} onClick={exportarExcel} disabled={ventasMes.length === 0}>
+                  <Download size={14} /> Excel
+                </button>
+             </div>
           </div>
           
           {ventasMes.length === 0 ? (
-            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay ventas en este mes.</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay movimientos en este mes.</div>
           ) : (
-            ventasMes.slice(0, 30).map(v => (
-              <div key={v.id} className="venta-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{v.metodo_pago}</div>
+            ventasMes.slice(0, 30).map(v => {
+              const esEgreso = v.total_final < 0;
+              return (
+                <div key={v.id} className="venta-card" style={{ borderLeft: esEgreso ? '4px solid var(--ocupada)' : '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>
+                      {esEgreso ? `SALIDA (${v.metodo_pago})` : v.metodo_pago}
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div className="bc-display" style={{ fontWeight: 600, fontSize: 16, color: esEgreso ? 'var(--ocupada)' : 'var(--ink)' }}>
+                        {formatMoney(v.total_final)}
+                      </div>
+                      <button className="icon-btn-ghost" style={{ color: 'var(--ocupada)', padding: 4 }} onClick={() => onAbrirEliminarVenta(v)} aria-label="Eliminar registro">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div className="bc-display" style={{ fontWeight: 600, fontSize: 16, color: 'var(--ink)' }}>{formatMoney(v.total_final)}</div>
-                    <button className="icon-btn-ghost" style={{ color: 'var(--ocupada)', padding: 4 }} onClick={() => onAbrirEliminarVenta(v)} aria-label="Eliminar venta">
-                      <Trash2 size={16} />
-                    </button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div><CalendarDays size={11} style={{display:'inline', marginBottom:-2}}/> {formatearFecha(v.creado_en)}</div>
+                    {!esEgreso && v.descuento > 0 && <div style={{color: 'var(--libre)', fontWeight: 500}}>Desc: {formatMoney(v.descuento)}</div>}
+                    {!esEgreso && v.descuento < 0 && <div style={{color: 'var(--ocupada)', fontWeight: 500}}>Recargo: {formatMoney(Math.abs(v.descuento))}</div>}
+                    {esEgreso && <div style={{color: 'var(--text-muted)', fontStyle: 'italic'}}>{v.items[0]?.nombre}</div>}
                   </div>
                 </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
-                  <div><CalendarDays size={11} style={{display:'inline', marginBottom:-2}}/> {formatearFecha(v.creado_en)}</div>
-                  {v.descuento > 0 && <div style={{color: 'var(--libre)', fontWeight: 500}}>Desc: {formatMoney(v.descuento)}</div>}
-                  {v.descuento < 0 && <div style={{color: 'var(--ocupada)', fontWeight: 500}}>Recargo: {formatMoney(Math.abs(v.descuento))}</div>}
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
           {ventasMes.length > 30 && <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>Mostrando los últimos 30 registros de este mes.</div>}
         </div>
@@ -1009,7 +868,6 @@ export default function BodegonCocoApp() {
   const [ventaAEliminar, setVentaAEliminar] = useState(null); 
   const [itemNota, setItemNota] = useState(null); 
   
-  // 🚀 ESTADOS NUEVOS PARA LA SELECCIÓN INTELIGENTE DE SALSAS
   const [productoParaSalsa, setProductoParaSalsa] = useState(null);
   const salsasDisponibles = useMemo(() => {
     return productos.filter(p => p.nombre.toLowerCase().includes('salsa'));
@@ -1093,7 +951,6 @@ export default function BodegonCocoApp() {
   function abrirMesa(mesaId) { setMesaActivaId(mesaId); setCategoriaFiltro('Todas'); setVista('mesa'); }
   function volverAGrid() { setVista('grid'); setMesaActivaId(null); }
 
-  // 🚀 PASO 1: INTERCEPTOR DE PASTAS
   function iniciarAgregarItem(producto) {
     const esPasta = /raviol|sorrentino|ñoqui|fideo|tallarin|espagueti|canelon|pasta|macarron/i.test(producto.nombre);
     const esSalsa = producto.nombre.toLowerCase().includes('salsa');
@@ -1106,13 +963,11 @@ export default function BodegonCocoApp() {
     }
   }
 
-  // 🚀 PASO 2: AGREGADO REAL DEL PRODUCTO (CON O SIN SALSA)
   function agregarItemConfirmado(producto, salsaSeleccionada) {
     const mesaActual = mesas.find((m) => m.id === mesaActivaId);
     if (!mesaActual) return;
     const eraLibreO_Reservada = mesaActual.estado === 'Libre' || mesaActual.estado === 'Reservada';
     
-    // Matemática mágica para fusionar la pasta y la salsa
     let nombreFinal = producto.nombre;
     let precioFinal = producto.precio;
     let varianteKey = null;
@@ -1120,13 +975,12 @@ export default function BodegonCocoApp() {
     if (salsaSeleccionada) {
       nombreFinal = `${producto.nombre} con ${salsaSeleccionada.nombre}`;
       precioFinal = producto.precio + salsaSeleccionada.precio;
-      varianteKey = salsaSeleccionada.id; // Clave para que no se mezcle con una pasta sola
+      varianteKey = salsaSeleccionada.id; 
     }
 
     let nuevoPedido;
     if (mesaActual.pedido) {
       nuevoPedido = { ...mesaActual.pedido, items: [...mesaActual.pedido.items] };
-      // Busca si ya pidieron exactamente esta misma pasta con esta misma salsa
       const idx = nuevoPedido.items.findIndex((it) => it.productId === producto.id && it.variante === varianteKey && !it.nota);
       if (idx >= 0) {
         nuevoPedido.items[idx] = { ...nuevoPedido.items[idx], cantidad: nuevoPedido.items[idx].cantidad + 1 };
@@ -1216,6 +1070,33 @@ export default function BodegonCocoApp() {
     if (error) console.error("Error registrando la venta:", error);
   }
 
+  // 🚀 LÓGICA DE CANCELAR MESA SIN COBRAR (NUEVO REQUERIMIENTO)
+  function cancelarMesaSinCobrar() {
+    const mesaActual = mesas.find((m) => m.id === mesaActivaId);
+    if (!mesaActual) return;
+    
+    setMesas((prev) => prev.map((m) => m.id === mesaActivaId ? { ...m, estado: 'Libre', pedido: null } : m));
+    guardarMesaDB(mesaActivaId, 'Libre', null);
+    
+    setModal(null);
+    volverAGrid();
+  }
+
+  async function registrarEgreso(motivo, montoNum, metodo) {
+    const nuevoEgreso = {
+      total_original: -montoNum,
+      metodo_pago: metodo,
+      descuento: 0,
+      total_final: -montoNum,
+      items: [{ productId: 0, nombre: `EGRESO: ${motivo}`, precioUnit: -montoNum, cantidad: 1 }]
+    };
+
+    setModal(null);
+    
+    const { error } = await supabase.from('ventas').insert([nuevoEgreso]);
+    if (error) console.error("Error registrando egreso:", error);
+  }
+
   async function confirmarEliminacionVenta() {
     if (!ventaAEliminar) return;
     const idBorrar = ventaAEliminar.id;
@@ -1228,10 +1109,23 @@ export default function BodegonCocoApp() {
     if (error) console.error("Error al eliminar venta:", error);
   }
 
-  function intentarLoginAdmin() {
-    if (pinInput === ADMIN_PIN) { setRol('admin'); setModal(null); setPinInput(''); setPinError(false); }
-    else { setPinError(true); setPinInput(''); }
+  async function intentarLoginAdmin() {
+    try {
+      const msgBuffer = new TextEncoder().encode(pinInput);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      if (hashHex === ADMIN_PIN_HASH) {
+        setRol('admin'); setModal(null); setPinInput(''); setPinError(false);
+      } else {
+        setPinError(true); setPinInput('');
+      }
+    } catch (e) {
+      console.error("Error encriptando PIN:", e);
+    }
   }
+
   function salirDeAdmin() { setRol('mozo'); if (vista === 'admin') setVista('grid'); }
 
   async function guardarProducto(datos) {
@@ -1272,8 +1166,7 @@ export default function BodegonCocoApp() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#DCD5C4', display: 'flex', justifyContent: 'center' }}>
-      <div className="bc-app">
-        <style>{STYLES}</style>
+      <div className="bc-app tema-bodegon">
 
         {cargando ? (
           <LoadingScreen />
@@ -1291,6 +1184,7 @@ export default function BodegonCocoApp() {
                 onQuitarItem={quitarItem} onAbrirRecibo={() => setModal('recibo')} onAbrirCobrar={() => setModal('cobrar')}
                 onCambiarEstadoDirecto={cambiarEstadoDirectoMesa}
                 onAbrirNota={(index, notaActual) => setItemNota({ index, notaActual })}
+                onAbrirCancelarMesa={() => setModal('cancelar_mesa')} // 🚀 ACÁ SE CONECTA EL BOTÓN NUEVO
               />
             )}
             
@@ -1300,16 +1194,18 @@ export default function BodegonCocoApp() {
                 onEditarProducto={(p) => { setProductoEditando(p); setModal('producto'); }} onEliminarProducto={eliminarProducto}
                 onAgregarMesa={agregarMesa} onEliminarMesa={eliminarMesa} avisoMesas={avisoMesas}
                 onAbrirEliminarVenta={(v) => { setVentaAEliminar(v); setModal('eliminar_venta'); }} 
+                onAbrirEgreso={() => setModal('egreso')}
               />
             )}
           </>
         )}
 
         {modal === 'pin' && <PinModal pinInput={pinInput} setPinInput={setPinInput} pinError={pinError} onConfirmar={intentarLoginAdmin} onClose={() => setModal(null)} />}
-        
         {modal === 'recibo' && mesaActiva && <TicketCocinaModal mesa={mesaActiva} onClose={() => setModal(null)} onImprimir={() => window.print()} />}
-        
         {modal === 'cobrar' && mesaActiva && <ConfirmarCobroModal mesa={mesaActiva} onCancelar={() => setModal(null)} onConfirmar={cobrarYCerrar} />}
+        
+        {/* 🚀 EL NUEVO MODAL DE ADVERTENCIA PARA CANCELAR MESA */}
+        {modal === 'cancelar_mesa' && mesaActiva && <ConfirmarCancelarMesaModal mesa={mesaActiva} onCancelar={() => setModal(null)} onConfirmar={cancelarMesaSinCobrar} />}
         
         {modal === 'seleccionar_salsa' && productoParaSalsa && (
           <SeleccionarSalsaModal 
@@ -1322,8 +1218,9 @@ export default function BodegonCocoApp() {
         
         {modal === 'producto' && <ProductoFormModal producto={productoEditando} categoriasExistentes={categorias.filter((c) => c !== 'Todas')} onGuardar={guardarProducto} onClose={() => { setModal(null); setProductoEditando(null); }} />}
         
-        {itemNota && <NotaModal notaActual={itemNota.notaActual} onClose={() => setItemNota(null)} onGuardar={guardarNotaItem} />}
+        {modal === 'egreso' && <EgresoModal onClose={() => setModal(null)} onGuardar={registrarEgreso} />}
         
+        {itemNota && <NotaModal notaActual={itemNota.notaActual} onClose={() => setItemNota(null)} onGuardar={guardarNotaItem} />}
         {modal === 'eliminar_venta' && <ConfirmarEliminarVentaModal venta={ventaAEliminar} onCancelar={() => { setModal(null); setVentaAEliminar(null); }} onConfirmar={confirmarEliminacionVenta} />}
       </div>
     </div>
